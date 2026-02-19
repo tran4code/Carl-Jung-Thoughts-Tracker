@@ -1,0 +1,40 @@
+{
+  "id": 1,
+  "title": "Approaching the Unconscious",
+  "author": "Carl G. Jung",
+  "pageRange": "1-94",
+  "paragraphs": [
+    {
+      "id": "1-001",
+      "page": 1,
+      "sentences": [
+        {
+          "id": "1-001-01",
+          "text": "Man uses the spoken or written word to express the meaning of what he wants to convey."
+        },
+        {
+          "id": "1-001-02",
+          "text": "His communication is full of symbols, but he also often employs signs or images that are not strictly descriptive."
+        }
+      ]
+    },
+    {
+      "id": "1-002",
+      "page": 1,
+      "sentences": [
+        {
+          "id": "1-002-01",
+          "text": "Some are mere abbreviations or strings of initials, such as UN, UNICEF, or UNESCO; others are familiar trade marks, names of patent medicines, badges, or insignia."
+        },
+        {
+          "id": "1-002-02",
+          "text": "Although these are meaningless in themselves, they have acquired a recognizable meaning through common usage or deliberate intent."
+        },
+        {
+          "id": "1-002-03",
+          "text": "Such things are not symbols. They are signs, and they do no more than denote the objects to which they are attached."
+        }
+      ]
+    }
+  ]
+}

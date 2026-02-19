@@ -1,0 +1,102 @@
+{
+  "1": [
+    {
+      "index": 0,
+      "type": "imagery",
+      "title": "The Door in the Dream",
+      "prompt": "Close your eyes and imagine a door that has appeared in a recent dream — or invent one now. What does it look like? What material is it made of? Is it locked or open? Now, without forcing anything, allow the door to open. Describe what you see on the other side. Write freely for a few minutes."
+    },
+    {
+      "index": 1,
+      "type": "shadow work",
+      "title": "The Person Who Irritates You",
+      "prompt": "Think of someone who deeply irritates you — not someone who has harmed you, but someone whose personality grates on you. List three specific qualities that bother you about them. Now, honestly consider: do you possess any of these qualities yourself, even in small or hidden ways? Jung would say you almost certainly do. Write about what you find."
+    },
+    {
+      "index": 2,
+      "type": "reflection",
+      "title": "Your Recurring Symbol",
+      "prompt": "Think back across your life's dreams. Is there an image, object, animal, or place that has appeared more than once? Describe it in detail. What feelings does it evoke? Don't interpret it yet — just describe it as vividly as you can, as if painting it with words."
+    }
+  ],
+  "2": [
+    {
+      "index": 0,
+      "type": "imagery",
+      "title": "Your Personal Hero Journey",
+      "prompt": "Henderson describes the hero myth as a universal pattern. Think of a time in your life when you faced a significant challenge, left something familiar behind, and emerged changed. Write this experience as if it were a myth — in the third person, with a hero, a trial, and a transformation."
+    },
+    {
+      "index": 1,
+      "type": "reflection",
+      "title": "The Trickster in Your Life",
+      "prompt": "The trickster is the archetype that disrupts order, breaks rules, and often brings unexpected wisdom through chaos. When has a disruption, mistake, or 'accident' in your life led to something unexpectedly valuable? Describe the trickster moment."
+    },
+    {
+      "index": 2,
+      "type": "shadow work",
+      "title": "Initiation Inventory",
+      "prompt": "Henderson discusses initiation rites as psychological thresholds. What were the major 'initiations' in your life — moments when you crossed a threshold and couldn't go back? List them chronologically. For each, note: what died, and what was born?"
+    }
+  ],
+  "3": [
+    {
+      "index": 0,
+      "type": "imagery",
+      "title": "Dialogue with the Shadow",
+      "prompt": "Imagine your shadow as a person standing in front of you. What do they look like? What are they wearing? What expression do they have? Now let them speak. Write a dialogue between you and your shadow. Let it say things you might not want to hear. Don't censor."
+    },
+    {
+      "index": 1,
+      "type": "reflection",
+      "title": "Anima / Animus Encounters",
+      "prompt": "Von Franz describes how the anima or animus often first appears as an idealized or troubling figure in dreams or projections. Think of a figure — real or imagined — who has held an unusual fascination or power over you. What qualities do they embody that you haven't developed in yourself?"
+    },
+    {
+      "index": 2,
+      "type": "shadow work",
+      "title": "The Mandala of Now",
+      "prompt": "Draw a circle on paper. Without planning, fill it with shapes, colors, or patterns that feel right in this moment. Don't try to make it 'good' or meaningful. After you finish, look at it and describe what you see. What does the balance (or imbalance) in your mandala tell you about your current state?"
+    }
+  ],
+  "4": [
+    {
+      "index": 0,
+      "type": "imagery",
+      "title": "The Sacred Stone",
+      "prompt": "Jaffé discusses the symbolic power of stones throughout human history. Imagine you find a stone that feels significant — perhaps in a dream, perhaps on a walk. Pick it up in your mind. What does it feel like? What color is it? If this stone could speak, what would it say? Let it speak."
+    },
+    {
+      "index": 1,
+      "type": "reflection",
+      "title": "Art That Moved You",
+      "prompt": "Think of a work of art — painting, sculpture, building, song — that has moved you in a way you couldn't fully explain. Describe the experience. What about it bypassed your rational mind and spoke to something deeper? Can you connect it to any of the symbols Jaffé discusses?"
+    },
+    {
+      "index": 2,
+      "type": "shadow work",
+      "title": "Your Creative Unconscious",
+      "prompt": "Spend five minutes drawing, doodling, or writing without any plan or goal. Let your hand move without direction from your conscious mind. When you're done, look at what emerged. What do you notice? Are there any shapes or themes that surprise you?"
+    }
+  ],
+  "5": [
+    {
+      "index": 0,
+      "type": "reflection",
+      "title": "Your Dream Series",
+      "prompt": "Jacobi shows how meaning emerges across a series of dreams rather than in single dreams. Look back at the dreams you've logged during this reading journey. What threads connect them? What images have evolved or transformed? Write about the story your dreams are telling as a whole."
+    },
+    {
+      "index": 1,
+      "type": "imagery",
+      "title": "The Painting of Your Psyche",
+      "prompt": "Jacobi's patient painted images from their unconscious. If you were to paint the current state of your inner world, what would the painting look like? Describe it in detail — the colors, the composition, the central image, what's in the background, what's hidden in the corners."
+    },
+    {
+      "index": 2,
+      "type": "shadow work",
+      "title": "Integration Letter",
+      "prompt": "Write a letter to the part of yourself you've been most reluctant to acknowledge during this reading journey. It might be a fear, a desire, a quality, or an old wound. Address it directly. Acknowledge it. Ask it what it needs. This is the work of individuation — making the unconscious conscious."
+    }
+  ]
+}

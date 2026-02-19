@@ -1,0 +1,92 @@
+{
+  "collective unconscious": {
+    "title": "Collective Unconscious",
+    "definition": "A part of the unconscious mind shared by all humanity, containing inherited archetypes and universal symbols that transcend individual experience.",
+    "example": "The recurring appearance of flood myths across unrelated cultures suggests a shared psychic heritage — a collective unconscious from which these stories emerge independently.",
+    "chapter": 1
+  },
+  "individuation": {
+    "title": "Individuation",
+    "definition": "The lifelong process of integrating the conscious and unconscious aspects of the psyche to become a whole, undivided Self — distinct from mere ego development.",
+    "example": "A person who begins to acknowledge their shadow qualities rather than projecting them onto others is taking a crucial step in individuation.",
+    "chapter": 3
+  },
+  "archetype": {
+    "title": "Archetype",
+    "definition": "A universal, inherited pattern of thought or symbolic image derived from the collective unconscious. Archetypes are not images themselves but tendencies to form certain images.",
+    "example": "The 'Wise Old Man' who appears as a guide in dreams — whether as Gandalf, Dumbledore, or an unnamed sage — is an archetypal figure.",
+    "chapter": 1
+  },
+  "shadow": {
+    "title": "Shadow",
+    "definition": "The unconscious aspect of the personality that the conscious ego does not identify with — often containing repressed weaknesses, desires, and instincts, but also hidden strengths.",
+    "example": "Someone who prides themselves on patience may have a shadow that contains intense rage, which occasionally erupts in dreams or unexpected outbursts.",
+    "chapter": 1
+  },
+  "anima": {
+    "title": "Anima",
+    "definition": "The unconscious feminine side of a man's personality, serving as a bridge to the deeper layers of the unconscious. It often appears in dreams as a mysterious female figure.",
+    "example": "A man who dreams repeatedly of an unknown woman leading him into a forest is encountering his anima, which is inviting him to explore his unconscious.",
+    "chapter": 3
+  },
+  "animus": {
+    "title": "Animus",
+    "definition": "The unconscious masculine side of a woman's personality, often manifesting as inner convictions, opinions, or dream figures that carry authority.",
+    "example": "A woman who dreams of a panel of judges or a powerful male figure giving pronouncements may be encountering her animus.",
+    "chapter": 3
+  },
+  "synchronicity": {
+    "title": "Synchronicity",
+    "definition": "A meaningful coincidence of outer and inner events that are not causally connected. Jung proposed this as an acausal connecting principle alongside causality.",
+    "example": "Thinking intensely about a deceased friend and then immediately receiving a letter they had written before dying — the timing is meaningful but not causal.",
+    "chapter": 1
+  },
+  "persona": {
+    "title": "Persona",
+    "definition": "The social mask or face we present to the world — a compromise between the individual and society's expectations. From the Latin word for 'mask' worn by actors.",
+    "example": "The professional demeanor a therapist adopts during sessions is persona — necessary and useful, but potentially dangerous if mistaken for the true self.",
+    "chapter": 1
+  },
+  "active imagination": {
+    "title": "Active Imagination",
+    "definition": "A meditation technique developed by Jung in which the contents of the unconscious are translated into images, narratives, or personified figures, and then consciously engaged with.",
+    "example": "Sitting quietly and allowing a dream figure to 'speak,' then responding to it in writing — not controlling the fantasy but participating in it.",
+    "chapter": 1
+  },
+  "mandala": {
+    "title": "Mandala",
+    "definition": "A circular symbolic form representing the totality of the Self. Jung found that patients spontaneously drew mandalas during critical phases of individuation.",
+    "example": "A patient who begins spontaneously drawing circles with four quadrants during a period of inner turmoil is unconsciously creating a mandala — an attempt at psychic self-healing.",
+    "chapter": 4
+  },
+  "projection": {
+    "title": "Projection",
+    "definition": "An unconscious process whereby a personal quality — whether positive or negative — is perceived as belonging to another person or the external world rather than to oneself.",
+    "example": "Intensely disliking someone for being 'arrogant' when the quality you're reacting to is actually your own unacknowledged arrogance — that's shadow projection.",
+    "chapter": 1
+  },
+  "complex": {
+    "title": "Complex",
+    "definition": "A cluster of emotionally charged associations in the unconscious, organized around a central archetype, that can temporarily take over the ego and drive behavior.",
+    "example": "A 'mother complex' might cause someone to unconsciously seek nurturing in every relationship, or to rebel against any perceived authority figure.",
+    "chapter": 1
+  },
+  "libido": {
+    "title": "Libido (Jungian)",
+    "definition": "In Jung's broader definition, libido is general psychic energy — not merely sexual energy as Freud defined it. It is the energy that drives all psychological activity.",
+    "example": "When someone becomes deeply absorbed in painting or spiritual practice, Jung would say their libido has been channeled into creative or transcendent expression.",
+    "chapter": 1
+  },
+  "transcendent function": {
+    "title": "Transcendent Function",
+    "definition": "The psychic function that mediates between opposites — conscious and unconscious, thinking and feeling — producing a new, third position that transcends both.",
+    "example": "A conflict between duty and desire that resolves not by choosing one side but by discovering a creative solution that honors both — that's the transcendent function at work.",
+    "chapter": 3
+  },
+  "enantiodromia": {
+    "title": "Enantiodromia",
+    "definition": "The tendency of things to turn into their opposites, especially when taken to an extreme. A principle Jung borrowed from Heraclitus and applied to psychic processes.",
+    "example": "A culture that becomes excessively rational and suppresses emotion will eventually erupt in irrational mass movements — the repressed opposite returns with force.",
+    "chapter": 1
+  }
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "title": "Approaching the Unconscious",
+    "author": "Carl G. Jung",
+    "pageRange": "1-94",
+    "summary": "Jung introduces the concept of the unconscious mind, exploring how dreams, symbols, and archetypes serve as the language through which the unconscious communicates with our waking consciousness."
+  },
+  {
+    "id": 2,
+    "title": "Ancient Myths and Modern Man",
+    "author": "Joseph L. Henderson",
+    "pageRange": "95-156",
+    "summary": "Henderson examines how ancient mythological motifs — the hero, the trickster, initiation rites — continue to appear in the dreams and fantasies of modern people, revealing the timeless patterns of the collective unconscious."
+  },
+  {
+    "id": 3,
+    "title": "The Process of Individuation",
+    "author": "M.-L. von Franz",
+    "pageRange": "157-254",
+    "summary": "Von Franz traces the journey of individuation — the process by which a person becomes a psychological whole — through dream analysis, showing how the shadow, anima/animus, and Self emerge as guides."
+  },
+  {
+    "id": 4,
+    "title": "Symbolism in the Visual Arts",
+    "author": "Aniela Jaffé",
+    "pageRange": "255-322",
+    "summary": "Jaffé explores how archetypal symbols manifest in painting, sculpture, and architecture throughout history, from sacred stones to modern abstract art, revealing the unconscious at work in creative expression."
+  },
+  {
+    "id": 5,
+    "title": "Symbols in an Individual Analysis",
+    "author": "Jolande Jacobi",
+    "pageRange": "323-374",
+    "summary": "Jacobi presents a detailed case study of a single patient's analysis, showing how symbols evolved across a series of dreams and paintings to chart the course of psychological transformation."
+  }
+]
