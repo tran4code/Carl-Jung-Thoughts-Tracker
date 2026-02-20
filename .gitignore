@@ -26,3 +26,5 @@ dist-ssr
 *.epub
 scripts/
 functions/.env
+.claude/
+.firebase/
