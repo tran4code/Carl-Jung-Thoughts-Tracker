@@ -14,7 +14,6 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
 
   const handleVoiceComplete = (result) => {
     if (!result) return;
-    // Append transcription to existing text
     setText((prev) => {
       const trimmed = prev.trim();
       return trimmed ? `${trimmed} ${result.transcription}` : result.transcription;
@@ -23,7 +22,6 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
       const trimmed = prev?.trim();
       return trimmed ? `${trimmed} ${result.transcription}` : result.transcription;
     });
-    // Stack audio clip
     if (result.audioBase64) {
       setAudioClips((prev) => [
         ...prev,
@@ -36,17 +34,19 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
     setAudioClips((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Can save if there's text, a tag, or a passage — any combination
+  const canSubmit = text.trim() || tags.length > 0 || selectedPassage;
+
   const handleSubmit = async () => {
-    if (!text.trim()) return;
+    if (!canSubmit) return;
     setSubmitting(true);
 
     try {
       await addReaction({
         reader,
-        text: text.trim(),
+        text: text.trim() || null,
         rawTranscription,
         audioClips: audioClips.length > 0 ? audioClips : null,
-        // Keep single fields for backward compat
         audioBase64: audioClips[0]?.audioBase64 || null,
         audioMimeType: audioClips[0]?.audioMimeType || null,
         passageStart: selectedPassage?.start || null,
@@ -69,8 +69,12 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
 
   return (
     <div className="reaction-input">
+      {/* 1. Tags first — set the intention */}
+      <TagPicker selected={tags} onChange={setTags} />
+
+      {/* 2. Reaction text (optional) */}
       <textarea
-        placeholder="What stood out to you?"
+        placeholder="What's on your mind? (optional)"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
@@ -83,7 +87,6 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         </div>
       )}
 
-      {/* Stacked audio clips */}
       {audioClips.length > 0 && (
         <div className="audio-clips-list">
           {audioClips.map((clip, i) => (
@@ -101,7 +104,6 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         </div>
       )}
 
-      {/* Compact inline voice recorder */}
       <VoiceRecorder
         reader={reader}
         chapterId={chapterId}
@@ -109,6 +111,7 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         showToast={showToast}
       />
 
+      {/* 3. Find Passage (optional) */}
       {chapterData && (
         <PassageMatcher
           chapterData={chapterData}
@@ -119,15 +122,13 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         />
       )}
 
-      <TagPicker selected={tags} onChange={setTags} />
-
+      {/* Submit */}
       <button
         className="btn btn-primary"
-        style={{ marginTop: '0.75rem', width: '100%' }}
         onClick={handleSubmit}
-        disabled={submitting || !text.trim()}
+        disabled={submitting || !canSubmit}
       >
-        {submitting ? 'Saving...' : 'Add Reaction'}
+        {submitting ? 'Saving...' : 'Save'}
       </button>
     </div>
   );

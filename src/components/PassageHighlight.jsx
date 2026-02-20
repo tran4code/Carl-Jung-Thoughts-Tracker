@@ -11,7 +11,7 @@ export default function PassageHighlight({
     if (!chapterData?.paragraphs) return [];
     const sentences = [];
     for (const p of chapterData.paragraphs) {
-      for (const s of p.sentences) {
+      for (const s of (p.sentences || [])) {
         sentences.push({ ...s, page: p.page });
       }
     }

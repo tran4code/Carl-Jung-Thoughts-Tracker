@@ -43,9 +43,23 @@ function App() {
   if (!reader) {
     return (
       <div className="reader-selection">
-        <h1>Man and His Symbols</h1>
-        <p>A shared reading companion for exploring Jung's final masterwork together.</p>
-        <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>Who are you?</p>
+        <div className="title-page">
+          <div className="title-dots">
+            <span /><span /><span />
+          </div>
+          <h1 className="title-main">
+            Man <span className="title-ampersand">&amp;</span> His Symbols
+          </h1>
+          <div className="title-author">Carl Gustav Jung</div>
+          <div className="title-rule" />
+          <div className="title-contributors">
+            <span>Conceived and edited by Carl G. Jung</span>
+            <span>with M.-L. von Franz, Joseph L. Henderson,</span>
+            <span>Jolande Jacobi, Aniela Jaff&eacute;</span>
+          </div>
+        </div>
+
+        <div className="reader-prompt">Who are you?</div>
         <div className="reader-buttons">
           <button className="reader-select-btn keith" onClick={() => selectReader('Keith')}>
             Keith

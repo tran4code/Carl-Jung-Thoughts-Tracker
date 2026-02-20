@@ -3,9 +3,15 @@ import PassageHighlight from './PassageHighlight';
 import ConceptHighlighter from './ConceptHighlighter';
 import AudioPlayer from './AudioPlayer';
 import ReplySection from './ReplySection';
-import symbolsData from '../data/symbols.json';
+import { REACTION_TAGS } from './TagPicker';
 
-const symbolColorMap = Object.fromEntries(symbolsData.map((s) => [s.name, s.color]));
+const tagMap = Object.fromEntries(REACTION_TAGS.map((t) => [t.key, t]));
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatDate(ts) {
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
 
 export default function ReactionCard({ reaction, chapterData, onShowConcept, onUpdate, reader, onAddReply, onDeleteReaction, onDeleteReply }) {
   const [editing, setEditing] = useState(false);
@@ -15,6 +21,7 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
   const [confirmDelete, setConfirmDelete] = useState(false);
   const menuRef = useRef(null);
   const readerClass = reaction.reader.toLowerCase();
+  const initial = reaction.reader.charAt(0).toUpperCase();
 
   // Close menu on outside click
   useEffect(() => {
@@ -45,18 +52,34 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
   };
 
   const hasMenu = onUpdate || onDeleteReaction;
+  const firstTag = reaction.tags?.[0];
+  const tagInfo = firstTag ? tagMap[firstTag] : null;
 
   return (
     <div className={`reaction-card ${readerClass}`}>
+      {/* Card top — avatar, name, tag, date, menu */}
       <div className="reaction-card-header">
-        <div className={`reaction-reader ${readerClass}`}>{reaction.reader}</div>
+        <div className="card-identity">
+          <div className={`card-avatar ${readerClass}`}>{initial}</div>
+          <span className={`card-user-name ${readerClass}`}>{reaction.reader}</span>
+          <div className="card-meta">
+            {tagInfo && (
+              <span className="card-tag">
+                <span className="tag-emoji">{tagInfo.emoji}</span> {tagInfo.label}
+              </span>
+            )}
+            {reaction.timestamp && (
+              <span className="card-date">{formatDate(reaction.timestamp)}</span>
+            )}
+          </div>
+        </div>
         {hasMenu && (
           <div className="reaction-menu" ref={menuRef}>
             <button
               className="reaction-menu-btn"
               onClick={() => { setMenuOpen(!menuOpen); setConfirmDelete(false); }}
             >
-              &hellip;
+              &middot;&middot;&middot;
             </button>
             {menuOpen && (
               <div className="reaction-menu-dropdown">
@@ -98,6 +121,7 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
         )}
       </div>
 
+      {/* Passage quote */}
       {reaction.passageStart && chapterData && (
         <PassageHighlight
           chapterData={chapterData}
@@ -108,17 +132,9 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
         />
       )}
 
-      {/* Multiple audio clips (new format) */}
-      {reaction.audioClips && reaction.audioClips.length > 0 ? (
-        reaction.audioClips.map((clip, i) => (
-          <AudioPlayer key={i} audioBase64={clip.audioBase64} audioMimeType={clip.audioMimeType} />
-        ))
-      ) : reaction.audioBase64 ? (
-        <AudioPlayer audioBase64={reaction.audioBase64} audioMimeType={reaction.audioMimeType} />
-      ) : null}
-
+      {/* Reflection text */}
       {editing ? (
-        <div>
+        <div style={{ padding: '0 1.4rem 1.2rem' }}>
           <textarea
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
@@ -133,14 +149,29 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
             </button>
           </div>
         </div>
-      ) : (
+      ) : reaction.text ? (
         <div className="reaction-text">
           <ConceptHighlighter text={reaction.text} onShowConcept={onShowConcept} />
         </div>
-      )}
+      ) : null}
+
+      {/* Audio clips */}
+      {reaction.audioClips && reaction.audioClips.length > 0 ? (
+        <div className="card-footer">
+          <div style={{ flex: 1 }}>
+            {reaction.audioClips.map((clip, i) => (
+              <AudioPlayer key={i} audioBase64={clip.audioBase64} audioMimeType={clip.audioMimeType} />
+            ))}
+          </div>
+        </div>
+      ) : reaction.audioBase64 ? (
+        <div className="card-footer">
+          <AudioPlayer audioBase64={reaction.audioBase64} audioMimeType={reaction.audioMimeType} />
+        </div>
+      ) : null}
 
       {reaction.rawTranscription && reaction.rawTranscription !== reaction.text && (
-        <details style={{ marginTop: '0.5rem' }}>
+        <details style={{ padding: '0 1.4rem 0.5rem' }}>
           <summary style={{ fontSize: '0.75rem', color: 'var(--text-dim)', cursor: 'pointer' }}>
             Original transcription
           </summary>
@@ -148,24 +179,6 @@ export default function ReactionCard({ reaction, chapterData, onShowConcept, onU
             {reaction.rawTranscription}
           </p>
         </details>
-      )}
-
-      {reaction.tags && reaction.tags.length > 0 && (
-        <div className="reaction-tags">
-          {reaction.tags.map((tag) => (
-            <span
-              key={tag}
-              className="tag-chip"
-              style={{
-                background: `${symbolColorMap[tag] || '#666'}22`,
-                color: symbolColorMap[tag] || '#999',
-                border: `1px solid ${symbolColorMap[tag] || '#666'}44`,
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
       )}
 
       {onAddReply && (

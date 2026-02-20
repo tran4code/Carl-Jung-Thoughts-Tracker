@@ -135,6 +135,83 @@ export function useChapterProgress(chapterId) {
   };
 }
 
+// Per-section progress tracking
+// Stores: { chapterId, sectionId, reader, finished, finishedAt }
+export function useSectionProgress(chapterId) {
+  // Map: sectionId -> { keith: bool, danielle: bool }
+  const [sectionProgress, setSectionProgress] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (chapterId == null) return;
+    const q = query(
+      collection(db, 'sectionProgress'),
+      where('chapterId', '==', chapterId)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const state = {};
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (!data.sectionId) return;
+        if (!state[data.sectionId]) state[data.sectionId] = { keith: false, danielle: false };
+        if (data.reader === 'Keith' && data.finished) state[data.sectionId].keith = true;
+        if (data.reader === 'Danielle' && data.finished) state[data.sectionId].danielle = true;
+      });
+      setSectionProgress(state);
+      setLoading(false);
+    });
+    return unsub;
+  }, [chapterId]);
+
+  const markSectionFinished = useCallback(async (sectionId, reader) => {
+    const q = query(
+      collection(db, 'sectionProgress'),
+      where('chapterId', '==', chapterId),
+      where('sectionId', '==', sectionId),
+      where('reader', '==', reader)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      await updateDoc(doc(db, 'sectionProgress', snap.docs[0].id), {
+        finished: true,
+        finishedAt: serverTimestamp(),
+      });
+    } else {
+      await addDoc(collection(db, 'sectionProgress'), {
+        chapterId,
+        sectionId,
+        reader,
+        finished: true,
+        finishedAt: serverTimestamp(),
+      });
+    }
+  }, [chapterId]);
+
+  const isSectionFinished = useCallback((sectionId, reader) => {
+    const sp = sectionProgress[sectionId];
+    if (!sp) return false;
+    return reader === 'Keith' ? sp.keith : sp.danielle;
+  }, [sectionProgress]);
+
+  const isSectionBothFinished = useCallback((sectionId) => {
+    const sp = sectionProgress[sectionId];
+    return sp ? sp.keith && sp.danielle : false;
+  }, [sectionProgress]);
+
+  const getSectionProgress = useCallback((sectionId) => {
+    return sectionProgress[sectionId] || { keith: false, danielle: false };
+  }, [sectionProgress]);
+
+  return {
+    sectionProgress,
+    loading,
+    markSectionFinished,
+    isSectionFinished,
+    isSectionBothFinished,
+    getSectionProgress,
+  };
+}
+
 export function useDreams(reader) {
   const [dreams, setDreams] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -4,34 +4,229 @@
     "title": "Approaching the Unconscious",
     "author": "Carl G. Jung",
     "pageRange": "1-94",
-    "summary": "Jung introduces the concept of the unconscious mind, exploring how dreams, symbols, and archetypes serve as the language through which the unconscious communicates with our waking consciousness."
+    "summary": "Jung introduces the concept of the unconscious mind, exploring how dreams, symbols, and archetypes serve as the language through which the unconscious communicates with our waking consciousness.",
+    "sections": [
+      {
+        "id": "1-s1",
+        "title": "The importance of dreams",
+        "level": 2
+      },
+      {
+        "id": "1-s2",
+        "title": "Past and future in the unconscious",
+        "level": 2
+      },
+      {
+        "id": "1-s3",
+        "title": "The function of dreams",
+        "level": 2
+      },
+      {
+        "id": "1-s4",
+        "title": "The analysis of dreams",
+        "level": 2
+      },
+      {
+        "id": "1-s5",
+        "title": "The problem of types",
+        "level": 2
+      },
+      {
+        "id": "1-s6",
+        "title": "The archetype in dream symbolism",
+        "level": 3
+      },
+      {
+        "id": "1-s7",
+        "title": "The soul of man",
+        "level": 3
+      },
+      {
+        "id": "1-s8",
+        "title": "The role of symbols",
+        "level": 2
+      },
+      {
+        "id": "1-s9",
+        "title": "Healing the split",
+        "level": 3
+      }
+    ]
   },
   {
     "id": 2,
     "title": "Ancient Myths and Modern Man",
     "author": "Joseph L. Henderson",
     "pageRange": "95-156",
-    "summary": "Henderson examines how ancient mythological motifs — the hero, the trickster, initiation rites — continue to appear in the dreams and fantasies of modern people, revealing the timeless patterns of the collective unconscious."
+    "summary": "Henderson examines how ancient mythological motifs — the hero, the trickster, initiation rites — continue to appear in the dreams and fantasies of modern people, revealing the timeless patterns of the collective unconscious.",
+    "sections": [
+      {
+        "id": "2-s1",
+        "title": "The eternal symbols",
+        "level": 2
+      },
+      {
+        "id": "2-s2",
+        "title": "Heroes and hero makers",
+        "level": 2
+      },
+      {
+        "id": "2-s3",
+        "title": "The archetype of initiation",
+        "level": 3
+      },
+      {
+        "id": "2-s4",
+        "title": "Beauty and the Beast",
+        "level": 3
+      },
+      {
+        "id": "2-s5",
+        "title": "Orpheus and the Son of Man",
+        "level": 3
+      },
+      {
+        "id": "2-s6",
+        "title": "Symbols of transcendence",
+        "level": 3
+      }
+    ]
   },
   {
     "id": 3,
     "title": "The Process of Individuation",
     "author": "M.-L. von Franz",
     "pageRange": "157-254",
-    "summary": "Von Franz traces the journey of individuation — the process by which a person becomes a psychological whole — through dream analysis, showing how the shadow, anima/animus, and Self emerge as guides."
+    "summary": "Von Franz traces the journey of individuation — the process by which a person becomes a psychological whole — through dream analysis, showing how the shadow, anima/animus, and Self emerge as guides.",
+    "sections": [
+      {
+        "id": "3-s1",
+        "title": "The pattern of psychic growth",
+        "level": 2
+      },
+      {
+        "id": "3-s2",
+        "title": "The first approach of the unconscious",
+        "level": 3
+      },
+      {
+        "id": "3-s3",
+        "title": "The realization of the shadow",
+        "level": 2
+      },
+      {
+        "id": "3-s4",
+        "title": "The anima: the woman within",
+        "level": 3
+      },
+      {
+        "id": "3-s5",
+        "title": "The animus: the man within",
+        "level": 3
+      },
+      {
+        "id": "3-s6",
+        "title": "The Self: symbols of totality",
+        "level": 2
+      },
+      {
+        "id": "3-s7",
+        "title": "The relation to the Self",
+        "level": 2
+      },
+      {
+        "id": "3-s8",
+        "title": "The social aspect of the Self",
+        "level": 3
+      }
+    ]
   },
   {
     "id": 4,
     "title": "Symbolism in the Visual Arts",
     "author": "Aniela Jaffé",
     "pageRange": "255-322",
-    "summary": "Jaffé explores how archetypal symbols manifest in painting, sculpture, and architecture throughout history, from sacred stones to modern abstract art, revealing the unconscious at work in creative expression."
+    "summary": "Jaffé explores how archetypal symbols manifest in painting, sculpture, and architecture throughout history, from sacred stones to modern abstract art, revealing the unconscious at work in creative expression.",
+    "sections": [
+      {
+        "id": "4-s1",
+        "title": "Sacred symbols — the stone and the animal",
+        "level": 2
+      },
+      {
+        "id": "4-s2",
+        "title": "The symbol of the circle",
+        "level": 3
+      },
+      {
+        "id": "4-s3",
+        "title": "Modern painting as a symbol",
+        "level": 2
+      },
+      {
+        "id": "4-s4",
+        "title": "The secret soul of things",
+        "level": 3
+      },
+      {
+        "id": "4-s5",
+        "title": "The retreat from reality",
+        "level": 3
+      },
+      {
+        "id": "4-s6",
+        "title": "Union of opposites",
+        "level": 2
+      }
+    ]
   },
   {
     "id": 5,
     "title": "Symbols in an Individual Analysis",
     "author": "Jolande Jacobi",
     "pageRange": "323-374",
-    "summary": "Jacobi presents a detailed case study of a single patient's analysis, showing how symbols evolved across a series of dreams and paintings to chart the course of psychological transformation."
+    "summary": "Jacobi presents a detailed case study of a single patient's analysis, showing how symbols evolved across a series of dreams and paintings to chart the course of psychological transformation.",
+    "sections": [
+      {
+        "id": "5-s1",
+        "title": "The beginning of the analysis",
+        "level": 2
+      },
+      {
+        "id": "5-s2",
+        "title": "The initial dream",
+        "level": 2
+      },
+      {
+        "id": "5-s3",
+        "title": "Fear of the unconscious",
+        "level": 2
+      },
+      {
+        "id": "5-s4",
+        "title": "The saint and the prostitute",
+        "level": 3
+      },
+      {
+        "id": "5-s5",
+        "title": "How the analysis developed",
+        "level": 3
+      },
+      {
+        "id": "5-s6",
+        "title": "The oracle dream",
+        "level": 2
+      },
+      {
+        "id": "5-s7",
+        "title": "Facing the irrational",
+        "level": 3
+      },
+      {
+        "id": "5-s8",
+        "title": "The final dream",
+        "level": 2
+      }
+    ]
   }
 ]

@@ -1,3 +1,5 @@
+import Fuse from 'fuse.js';
+
 const STOPWORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
   'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
@@ -25,7 +27,7 @@ export function buildCorpusIndex(chapterData) {
 
   const sentences = [];
   for (const p of chapterData.paragraphs) {
-    for (const s of p.sentences) {
+    for (const s of (p.sentences || [])) {
       sentences.push({ id: s.id, text: s.text, page: p.page });
     }
   }
@@ -112,4 +114,46 @@ export function findTopMatches(queryText, corpusIndex, k = 3) {
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, k);
+}
+
+// Fuse.js fuzzy search — better for OCR text with character-level noise
+export function buildFuseIndex(chapterData) {
+  if (!chapterData?.paragraphs) return null;
+
+  const sentences = [];
+  for (const p of chapterData.paragraphs) {
+    for (const s of (p.sentences || [])) {
+      sentences.push({ id: s.id, text: s.text, page: p.page });
+    }
+  }
+
+  const fuse = new Fuse(sentences, {
+    keys: ['text'],
+    threshold: 0.4,
+    includeScore: true,
+    minMatchCharLength: 3,
+  });
+
+  return fuse;
+}
+
+export function fuseSearch(fuse, queryText, k = 3) {
+  if (!fuse || !queryText?.trim()) return [];
+  return fuse.search(queryText).slice(0, k).map((r) => ({
+    ...r.item,
+    score: 1 - (r.score || 0), // Fuse score is 0=perfect, 1=worst; invert
+  }));
+}
+
+// Unified search: picks best method based on input source
+export function findPassages(queryText, corpusIndex, fuseIndex, method = 'auto', k = 3) {
+  if (!queryText?.trim()) return [];
+
+  if (method === 'fuse' || (method === 'auto' && queryText.length > 80)) {
+    // Long input (likely OCR) → Fuse.js fuzzy matching
+    return fuseSearch(fuseIndex, queryText, k);
+  }
+
+  // Short/spoken input → cosine similarity (better for paraphrasing)
+  return findTopMatches(queryText, corpusIndex, k);
 }

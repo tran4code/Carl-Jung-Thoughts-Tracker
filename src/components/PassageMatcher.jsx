@@ -1,30 +1,59 @@
-import { useMemo, useState } from 'react';
-import { buildCorpusIndex, findTopMatches } from '../utils/textSimilarity';
+import { useMemo, useState, useCallback } from 'react';
+import { buildCorpusIndex, buildFuseIndex, findPassages } from '../utils/textSimilarity';
 import PassageHighlight from './PassageHighlight';
+import VoiceSearch from './VoiceSearch';
+import CameraScanner from './CameraScanner';
 
 export default function PassageMatcher({ chapterData, reactionText, onSelect, selectedPassage, onPassageExpand }) {
   const [matches, setMatches] = useState([]);
   const [searched, setSearched] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const corpusIndex = useMemo(() => buildCorpusIndex(chapterData), [chapterData]);
+  const fuseIndex = useMemo(() => buildFuseIndex(chapterData), [chapterData]);
 
-  const handleSearch = () => {
-    if (!corpusIndex || !reactionText?.trim()) return;
-    const results = findTopMatches(reactionText, corpusIndex, 3);
+  const runSearch = useCallback((text, method = 'auto') => {
+    if (!text?.trim()) return;
+    const results = findPassages(text, corpusIndex, fuseIndex, method);
     setMatches(results);
     setSearched(true);
+  }, [corpusIndex, fuseIndex]);
+
+  // Voice A: Web Speech API result -> cosine similarity
+  const handleVoiceResult = useCallback((transcript) => {
+    setSearchQuery(transcript);
+    runSearch(transcript, 'cosine');
+  }, [runSearch]);
+
+  // Camera: OCR result -> fuse.js fuzzy search
+  const handleCameraResult = useCallback((text) => {
+    if (!text) return;
+    setSearchQuery(text);
+    runSearch(text, 'fuse');
+  }, [runSearch]);
+
+  // Manual search from reaction text
+  const handleManualSearch = () => {
+    runSearch(reactionText, 'auto');
+  };
+
+  // Typed query search
+  const handleQuerySearch = () => {
+    runSearch(searchQuery, 'auto');
   };
 
   const handleSelect = (match) => {
     onSelect({ start: match.id, end: match.id });
     setMatches([]);
     setSearched(false);
+    setSearchQuery('');
   };
 
   const handleClear = () => {
     onSelect(null);
     setMatches([]);
     setSearched(false);
+    setSearchQuery('');
   };
 
   // Show selected passage with expand buttons
@@ -50,13 +79,31 @@ export default function PassageMatcher({ chapterData, reactionText, onSelect, se
 
   return (
     <div className="passage-matcher">
-      <button
-        className="btn btn-secondary btn-small"
-        onClick={handleSearch}
-        disabled={!reactionText?.trim()}
-      >
-        Find Passage
-      </button>
+      <div className="passage-finder-label">Find Passage</div>
+
+      <div className="passage-finder-tools">
+        <VoiceSearch onResult={handleVoiceResult} />
+        <CameraScanner onResult={handleCameraResult} />
+        <button
+          className="passage-search-btn"
+          onClick={handleManualSearch}
+          disabled={!reactionText?.trim()}
+          title="Match from your reaction text"
+        >
+          <span className="passage-search-icon">🔍</span>
+          Auto-match
+        </button>
+      </div>
+
+      <div className="passage-finder-query">
+        <input
+          type="text"
+          placeholder="Or type a phrase to search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleQuerySearch()}
+        />
+      </div>
 
       {searched && matches.length === 0 && (
         <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>
