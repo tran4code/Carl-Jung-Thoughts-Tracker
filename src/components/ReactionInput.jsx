@@ -11,6 +11,8 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
   const [audioClips, setAudioClips] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPassage, setSelectedPassage] = useState(null);
+  const [pageOnly, setPageOnly] = useState(false);
+  const [page, setPage] = useState('');
 
   const handleVoiceComplete = (result) => {
     if (!result) return;
@@ -34,8 +36,8 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
     setAudioClips((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Can save if there's text, a tag, or a passage — any combination
-  const canSubmit = text.trim() || tags.length > 0 || selectedPassage;
+  // Can save if there's text, a tag, a passage, or a page number
+  const canSubmit = text.trim() || tags.length > 0 || selectedPassage || (pageOnly && page);
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -49,17 +51,18 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         audioClips: audioClips.length > 0 ? audioClips : null,
         audioBase64: audioClips[0]?.audioBase64 || null,
         audioMimeType: audioClips[0]?.audioMimeType || null,
-        passageStart: selectedPassage?.start || null,
-        passageEnd: selectedPassage?.end || null,
+        passageStart: pageOnly ? null : (selectedPassage?.start || null),
+        passageEnd: pageOnly ? null : (selectedPassage?.end || null),
         tags,
         isBlindReaction: false,
-        page: null,
+        page: pageOnly && page ? parseInt(page, 10) : null,
       });
       setText('');
       setTags([]);
       setRawTranscription(null);
       setAudioClips([]);
       setSelectedPassage(null);
+      setPage('');
     } catch {
       showToast('Failed to save reaction', true);
     } finally {
@@ -111,15 +114,43 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         showToast={showToast}
       />
 
-      {/* 3. Find Passage (optional) */}
-      {chapterData && (
-        <PassageMatcher
-          chapterData={chapterData}
-          reactionText={text}
-          onSelect={setSelectedPassage}
-          selectedPassage={selectedPassage}
-          onPassageExpand={setSelectedPassage}
-        />
+      {/* 3. Passage toggle: find passage or just a page number */}
+      <div className="ri-passage-toggle">
+        <button
+          className={`ri-toggle-btn${!pageOnly ? ' active' : ''}`}
+          onClick={() => { setPageOnly(false); setPage(''); }}
+        >
+          Find Passage
+        </button>
+        <button
+          className={`ri-toggle-btn${pageOnly ? ' active' : ''}`}
+          onClick={() => { setPageOnly(true); setSelectedPassage(null); }}
+        >
+          Page Only
+        </button>
+      </div>
+
+      {pageOnly ? (
+        <div className="ri-page-input">
+          <label className="ri-page-label">p.</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            placeholder="Page #"
+            value={page}
+            onChange={(e) => setPage(e.target.value)}
+          />
+        </div>
+      ) : (
+        chapterData && (
+          <PassageMatcher
+            chapterData={chapterData}
+            reactionText={text}
+            onSelect={setSelectedPassage}
+            selectedPassage={selectedPassage}
+            onPassageExpand={setSelectedPassage}
+          />
+        )
       )}
 
       {/* Submit */}

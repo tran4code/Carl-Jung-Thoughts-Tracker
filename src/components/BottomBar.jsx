@@ -5,7 +5,10 @@ export default function BottomBar({
   goToSection, goToPosition, sectionProgress, reader,
 }) {
   const progressRef = useRef(null);
+  const pageInputRef = useRef(null);
   const [showFinish, setShowFinish] = useState(false);
+  const [showPageJump, setShowPageJump] = useState(false);
+  const [pageInput, setPageInput] = useState('');
 
   // Tap on progress bar → jump to that position
   const handleProgressTap = useCallback((e) => {
@@ -37,6 +40,32 @@ export default function BottomBar({
       // Error silently handled
     }
   }, [currentSectionIndex, sectionMetrics, sectionProgress, reader]);
+
+  const handlePageJump = useCallback(() => {
+    const page = parseInt(pageInput, 10);
+    if (!page || isNaN(page)) return;
+    const el = document.querySelector(`[data-page="${page}"]`);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 60;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    setShowPageJump(false);
+    setPageInput('');
+  }, [pageInput]);
+
+  const handlePageKeyDown = useCallback((e) => {
+    if (e.key === 'Enter') handlePageJump();
+    if (e.key === 'Escape') { setShowPageJump(false); setPageInput(''); }
+  }, [handlePageJump]);
+
+  const togglePageJump = useCallback(() => {
+    setShowPageJump((v) => {
+      if (!v) setTimeout(() => pageInputRef.current?.focus(), 50);
+      return !v;
+    });
+    setShowFinish(false);
+    setPageInput('');
+  }, []);
 
   if (!sectionMetrics.length) return null;
 
@@ -79,7 +108,7 @@ export default function BottomBar({
 
           <button
             className={`bb-current${iFinished ? ' finished' : ''}`}
-            onClick={() => setShowFinish((v) => !v)}
+            onClick={() => { setShowFinish((v) => !v); setShowPageJump(false); }}
           >
             {current?.title || ''}
             {iFinished && <span className="bb-check">&check;</span>}
@@ -93,6 +122,10 @@ export default function BottomBar({
           ) : (
             <div className="bb-nav-spacer" />
           )}
+
+          <button className="bb-page-btn" onClick={togglePageJump} title="Jump to page">
+            p.
+          </button>
         </div>
 
         {/* Finish section popover */}
@@ -104,6 +137,24 @@ export default function BottomBar({
             <button className="bb-finish-cancel" onClick={() => setShowFinish(false)}>
               Cancel
             </button>
+          </div>
+        )}
+
+        {/* Page jump input */}
+        {showPageJump && (
+          <div className="bb-page-jump">
+            <span className="bb-page-label">p.</span>
+            <input
+              ref={pageInputRef}
+              className="bb-page-input"
+              type="number"
+              inputMode="numeric"
+              placeholder="Page #"
+              value={pageInput}
+              onChange={(e) => setPageInput(e.target.value)}
+              onKeyDown={handlePageKeyDown}
+            />
+            <button className="bb-page-go" onClick={handlePageJump}>Go</button>
           </div>
         )}
       </div>

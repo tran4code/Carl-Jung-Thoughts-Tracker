@@ -173,8 +173,10 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
           {chapterData?.sections && (
             <SectionChecklist
               sections={chapterData.sections}
+              chapterData={chapterData}
               sectionProgress={sectionProgressHook}
               reader={reader}
+              otherReactions={otherReactions}
             />
           )}
 
