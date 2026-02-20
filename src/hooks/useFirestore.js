@@ -38,22 +38,73 @@ export function useReactions(chapterId) {
   return { reactions, loading, addReaction, updateReaction };
 }
 
-export function useBlindReactions(chapterId) {
-  const { reactions, loading, addReaction } = useReactions(chapterId);
-  const blindReactions = reactions.filter((r) => r.isBlindReaction);
+export function useChapterReactions(chapterId, currentReader) {
+  const { reactions, loading, addReaction, updateReaction } = useReactions(chapterId);
 
-  const keithReaction = blindReactions.find((r) => r.reader === 'Keith');
-  const danielleReaction = blindReactions.find((r) => r.reader === 'Danielle');
-  const bothSubmitted = !!keithReaction && !!danielleReaction;
+  const myReactions = reactions.filter((r) => r.reader === currentReader);
+  const otherReactions = reactions.filter((r) => r.reader !== currentReader);
 
   return {
-    blindReactions,
-    keithReaction,
-    danielleReaction,
-    bothSubmitted,
+    myReactions,
+    otherReactions,
+    allReactions: reactions,
     loading,
     addReaction,
-    allReactions: reactions,
+    updateReaction,
+  };
+}
+
+export function useChapterProgress(chapterId) {
+  const [progress, setProgress] = useState({ keith: false, danielle: false });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (chapterId == null) return;
+    const q = query(
+      collection(db, 'chapterProgress'),
+      where('chapterId', '==', chapterId)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const state = { keith: false, danielle: false };
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (data.reader === 'Keith' && data.finished) state.keith = true;
+        if (data.reader === 'Danielle' && data.finished) state.danielle = true;
+      });
+      setProgress(state);
+      setLoading(false);
+    });
+    return unsub;
+  }, [chapterId]);
+
+  const markFinished = useCallback(async (reader) => {
+    const q = query(
+      collection(db, 'chapterProgress'),
+      where('chapterId', '==', chapterId),
+      where('reader', '==', reader)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      await updateDoc(doc(db, 'chapterProgress', snap.docs[0].id), {
+        finished: true,
+        finishedAt: serverTimestamp(),
+      });
+    } else {
+      await addDoc(collection(db, 'chapterProgress'), {
+        chapterId,
+        reader,
+        finished: true,
+        finishedAt: serverTimestamp(),
+      });
+    }
+  }, [chapterId]);
+
+  return {
+    keithFinished: progress.keith,
+    danielleFinished: progress.danielle,
+    bothFinished: progress.keith && progress.danielle,
+    loading,
+    markFinished,
   };
 }
 

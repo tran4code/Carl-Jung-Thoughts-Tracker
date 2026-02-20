@@ -1,21 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useBlindReactions } from '../hooks/useFirestore';
+import { useState, useEffect, useCallback } from 'react';
+import { useChapterReactions, useChapterProgress } from '../hooks/useFirestore';
 import chaptersMeta from '../data/chapters-meta.json';
-import BlindReaction from './BlindReaction';
-import ReactionCard from './ReactionCard';
-import PassageHighlight from './PassageHighlight';
+import ReactionStream from './ReactionStream';
+import ReactionInput from './ReactionInput';
+import ChapterReveal from './ChapterReveal';
 import DiscussionQuestions from './DiscussionQuestions';
 import ImaginationPrompt from './ImaginationPrompt';
-import ConceptHighlighter from './ConceptHighlighter';
 import MiniConstellation from './MiniConstellation';
 
 export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept, showToast }) {
   const [chapterData, setChapterData] = useState(null);
   const meta = chaptersMeta.find((c) => c.id === chapterId);
+
   const {
-    blindReactions, keithReaction, danielleReaction,
-    bothSubmitted, loading, addReaction, allReactions,
-  } = useBlindReactions(chapterId);
+    myReactions, otherReactions, allReactions,
+    loading: reactionsLoading, addReaction, updateReaction,
+  } = useChapterReactions(chapterId, reader);
+
+  const {
+    keithFinished, danielleFinished, bothFinished,
+    loading: progressLoading, markFinished,
+  } = useChapterProgress(chapterId);
 
   const [revealed, setRevealed] = useState(false);
 
@@ -26,27 +31,21 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
       .catch(() => showToast('Failed to load chapter text', true));
   }, [chapterId, showToast]);
 
-  // Check if this chapter was already revealed previously (both submitted)
-  useEffect(() => {
-    if (bothSubmitted) {
-      // Check localStorage for reveal state
-      const key = `jung-revealed-${chapterId}`;
-      if (localStorage.getItem(key)) {
-        setRevealed(true);
-      }
-    }
-  }, [bothSubmitted, chapterId]);
-
-  const handleReveal = () => {
+  const handleReveal = useCallback(() => {
     setRevealed(true);
     localStorage.setItem(`jung-revealed-${chapterId}`, 'true');
+  }, [chapterId]);
+
+  const handleMarkFinished = async () => {
+    try {
+      await markFinished(reader);
+    } catch {
+      showToast('Failed to mark as finished', true);
+    }
   };
 
-  const myReaction = reader === 'Keith' ? keithReaction : danielleReaction;
-  const hasSubmitted = !!myReaction;
-
-  // Non-blind reactions (annotations added after reveal)
-  const annotations = allReactions.filter((r) => !r.isBlindReaction);
+  const iFinished = reader === 'Keith' ? keithFinished : danielleFinished;
+  const loading = reactionsLoading || progressLoading;
 
   return (
     <div className="chapter-detail">
@@ -56,61 +55,51 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
         <div className="detail-title">{meta?.title}</div>
         <div className="detail-author">{meta?.author}</div>
         <div className="detail-pages">Pages {meta?.pageRange}</div>
-        <MiniConstellation chapterId={chapterId} />
+        <MiniConstellation reactions={myReactions} />
       </div>
 
-      {/* Blind Reaction Section */}
-      <h3 className="section-heading">Blind Reactions</h3>
+      {!iFinished && (
+        <ReactionInput
+          reader={reader}
+          chapterId={chapterId}
+          chapterData={chapterData}
+          addReaction={addReaction}
+          showToast={showToast}
+        />
+      )}
+
+      <h3 className="section-heading">My Reactions</h3>
 
       {loading ? (
         <div className="spinner" />
       ) : (
-        <BlindReaction
-          reader={reader}
-          chapterId={chapterId}
-          chapterData={chapterData}
-          hasSubmitted={hasSubmitted}
-          bothSubmitted={bothSubmitted}
-          revealed={revealed}
-          keithReaction={keithReaction}
-          danielleReaction={danielleReaction}
-          onSubmit={addReaction}
-          onReveal={handleReveal}
-          showToast={showToast}
-          onShowConcept={onShowConcept}
-        />
-      )}
-
-      {/* After reveal: show annotations, discussion, and prompts */}
-      {revealed && (
         <>
-          {/* Additional annotations */}
-          <h3 className="section-heading">Annotations</h3>
-          {annotations.length === 0 && (
-            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-              No annotations yet. Add thoughts as you discuss.
-            </p>
-          )}
-          {annotations.map((r) => (
-            <ReactionCard
-              key={r.id}
-              reaction={r}
-              chapterData={chapterData}
-              onShowConcept={onShowConcept}
-              onUpdate={null}
-            />
-          ))}
-
-          {/* Annotation input */}
-          <AnnotationInput
-            reader={reader}
-            chapterId={chapterId}
+          <ReactionStream
+            reactions={myReactions}
             chapterData={chapterData}
-            addReaction={addReaction}
-            showToast={showToast}
+            onShowConcept={onShowConcept}
+            onUpdateReaction={updateReaction}
           />
 
-          {/* Discussion Questions */}
+          <ChapterReveal
+            reader={reader}
+            chapterId={chapterId}
+            myReactions={myReactions}
+            otherReactions={otherReactions}
+            bothFinished={bothFinished}
+            keithFinished={keithFinished}
+            danielleFinished={danielleFinished}
+            onMarkFinished={handleMarkFinished}
+            onReveal={handleReveal}
+            revealed={revealed}
+            chapterData={chapterData}
+            onShowConcept={onShowConcept}
+          />
+        </>
+      )}
+
+      {revealed && (
+        <>
           <h3 className="section-heading">Discussion</h3>
           <DiscussionQuestions
             chapterId={chapterId}
@@ -120,7 +109,6 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
             showToast={showToast}
           />
 
-          {/* Active Imagination */}
           <h3 className="section-heading">Active Imagination</h3>
           <ImaginationPrompt
             chapterId={chapterId}
@@ -129,52 +117,6 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
           />
         </>
       )}
-    </div>
-  );
-}
-
-function AnnotationInput({ reader, chapterId, chapterData, addReaction, showToast }) {
-  const [text, setText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async () => {
-    if (!text.trim()) return;
-    setSubmitting(true);
-    try {
-      await addReaction({
-        reader,
-        text: text.trim(),
-        rawTranscription: null,
-        audioUrl: null,
-        passageStart: null,
-        passageEnd: null,
-        tags: [],
-        isBlindReaction: false,
-        page: null,
-      });
-      setText('');
-    } catch {
-      showToast('Failed to save annotation', true);
-    }
-    setSubmitting(false);
-  };
-
-  return (
-    <div style={{ marginTop: '0.75rem' }}>
-      <textarea
-        placeholder="Add an annotation..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={2}
-      />
-      <button
-        className="btn btn-primary btn-small"
-        style={{ marginTop: '0.5rem' }}
-        onClick={handleSubmit}
-        disabled={submitting || !text.trim()}
-      >
-        {submitting ? 'Saving...' : 'Add Note'}
-      </button>
     </div>
   );
 }

@@ -26,44 +26,112 @@ export default function PassageHighlight({
   const passage = allSentences.slice(startIdx, endIdx + 1);
   const startPage = passage[0]?.page;
   const endPage = passage[passage.length - 1]?.page;
+  const canTrim = passage.length > 1;
 
-  const expandLeft = () => {
-    if (startIdx > 0) {
-      const newStart = allSentences[startIdx - 1].id;
-      setStart(newStart);
-      if (onUpdate && reactionId) {
-        onUpdate(reactionId, { passageStart: newStart });
-      }
+  const canExpandUp = startIdx > 0;
+  const canExpandDown = endIdx < allSentences.length - 1;
+  const peekAbove = canExpandUp ? allSentences[startIdx - 1] : null;
+  const peekBelow = canExpandDown ? allSentences[endIdx + 1] : null;
+
+  const expandUp = () => {
+    if (!canExpandUp) return;
+    const newStart = allSentences[startIdx - 1].id;
+    setStart(newStart);
+    if (onUpdate && reactionId) {
+      onUpdate(reactionId, { passageStart: newStart });
     }
   };
 
-  const expandRight = () => {
-    if (endIdx < allSentences.length - 1) {
-      const newEnd = allSentences[endIdx + 1].id;
-      setEnd(newEnd);
-      if (onUpdate && reactionId) {
-        onUpdate(reactionId, { passageEnd: newEnd });
-      }
+  const expandDown = () => {
+    if (!canExpandDown) return;
+    const newEnd = allSentences[endIdx + 1].id;
+    setEnd(newEnd);
+    if (onUpdate && reactionId) {
+      onUpdate(reactionId, { passageEnd: newEnd });
+    }
+  };
+
+  const trimTop = () => {
+    if (!canTrim) return;
+    const newStart = allSentences[startIdx + 1].id;
+    setStart(newStart);
+    if (onUpdate && reactionId) {
+      onUpdate(reactionId, { passageStart: newStart });
+    }
+  };
+
+  const trimBottom = () => {
+    if (!canTrim) return;
+    const newEnd = allSentences[endIdx - 1].id;
+    setEnd(newEnd);
+    if (onUpdate && reactionId) {
+      onUpdate(reactionId, { passageEnd: newEnd });
     }
   };
 
   return (
     <div className="passage-container">
-      {startIdx > 0 && (
-        <button className="passage-expand-btn left" onClick={expandLeft}>&lsaquo;</button>
-      )}
-      <div className="passage-text">
-        {passage.map((s, i) => (
-          <span key={s.id} style={{
-            animation: `fadeIn 0.3s ease-out ${i * 0.05}s both`,
-          }}>
-            {s.text}{' '}
-          </span>
-        ))}
+      <div className="passage-body">
+        <div className="passage-content">
+          {/* Peek above — partially readable preview */}
+          {peekAbove && (
+            <div className="passage-peek above" onClick={expandUp}>
+              {peekAbove.text}
+            </div>
+          )}
+
+          {/* Selected sentences */}
+          <div className="passage-text">
+            {passage.map((s) => (
+              <span key={s.id}>{s.text} </span>
+            ))}
+          </div>
+
+          {/* Peek below — partially readable preview */}
+          {peekBelow && (
+            <div className="passage-peek below" onClick={expandDown}>
+              {peekBelow.text}
+            </div>
+          )}
+        </div>
+
+        {/* Fixed button stack on the right — always same 4 positions */}
+        <div className="passage-controls">
+          <button
+            className="passage-ctrl-btn"
+            onClick={expandUp}
+            disabled={!canExpandUp}
+            title="Add sentence above"
+          >
+            +&#x25B2;
+          </button>
+          <button
+            className="passage-ctrl-btn"
+            onClick={trimTop}
+            disabled={!canTrim}
+            title="Remove first sentence"
+          >
+            &minus;&#x25B2;
+          </button>
+          <button
+            className="passage-ctrl-btn"
+            onClick={trimBottom}
+            disabled={!canTrim}
+            title="Remove last sentence"
+          >
+            &minus;&#x25BC;
+          </button>
+          <button
+            className="passage-ctrl-btn"
+            onClick={expandDown}
+            disabled={!canExpandDown}
+            title="Add sentence below"
+          >
+            +&#x25BC;
+          </button>
+        </div>
       </div>
-      {endIdx < allSentences.length - 1 && (
-        <button className="passage-expand-btn right" onClick={expandRight}>&rsaquo;</button>
-      )}
+
       <div className="passage-page">
         {startPage === endPage ? `p. ${startPage}` : `pp. ${startPage}–${endPage}`}
       </div>

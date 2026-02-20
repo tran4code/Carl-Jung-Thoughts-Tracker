@@ -1,28 +1,18 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { useMemo } from 'react';
 import symbolsData from '../data/symbols.json';
 
 const symbolColorMap = Object.fromEntries(symbolsData.map((s) => [s.name, s.color]));
 
-export default function MiniConstellation({ chapterId }) {
-  const [symbols, setSymbols] = useState([]);
-
-  useEffect(() => {
-    if (chapterId == null) return;
-    const q = query(
-      collection(db, 'reactions'),
-      where('chapterId', '==', chapterId)
-    );
-    getDocs(q).then((snap) => {
-      const tagSet = new Set();
-      snap.docs.forEach((d) => {
-        const tags = d.data().tags || [];
-        tags.forEach((t) => tagSet.add(t));
-      });
-      setSymbols([...tagSet]);
-    }).catch(() => {});
-  }, [chapterId]);
+export default function MiniConstellation({ reactions = [] }) {
+  const symbols = useMemo(() => {
+    const tagSet = new Set();
+    for (const r of reactions) {
+      for (const t of r.tags || []) {
+        tagSet.add(t);
+      }
+    }
+    return [...tagSet];
+  }, [reactions]);
 
   if (symbols.length === 0) return null;
 

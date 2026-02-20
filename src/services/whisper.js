@@ -1,26 +1,11 @@
-import { WHISPER_API_URL } from '../config';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
 
-export async function transcribeAudio(audioBlob) {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OpenAI API key not configured');
-
-  const formData = new FormData();
-  formData.append('file', audioBlob, 'recording.webm');
-  formData.append('model', 'whisper-1');
-  formData.append('language', 'en');
-
-  const response = await fetch(WHISPER_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
+export async function transcribeAudio(audioBase64, mimeType) {
+  const fn = httpsCallable(functions, 'transcribeAudio');
+  const result = await fn({
+    audioBase64,
+    mimeType: mimeType || 'audio/webm',
   });
-
-  if (!response.ok) {
-    throw new Error(`Whisper API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.text;
+  return result.data.text;
 }

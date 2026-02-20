@@ -9,10 +9,24 @@ import { usePresence } from './hooks/usePresence';
 
 function App() {
   const [reader, setReader] = useState(() => localStorage.getItem('jung-reader'));
-  const [tab, setTab] = useState('read');
-  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [tab, setTab] = useState(() => sessionStorage.getItem('jung-tab') || 'read');
+  const [selectedChapter, setSelectedChapter] = useState(() => {
+    const saved = sessionStorage.getItem('jung-chapter');
+    return saved ? Number(saved) : null;
+  });
   const [activeConcept, setActiveConcept] = useState(null);
   const [toast, setToast] = useState(null);
+
+  const changeTab = (t) => {
+    setTab(t);
+    sessionStorage.setItem('jung-tab', t);
+  };
+
+  const changeChapter = (id) => {
+    setSelectedChapter(id);
+    if (id != null) sessionStorage.setItem('jung-chapter', id);
+    else sessionStorage.removeItem('jung-chapter');
+  };
 
   const { otherReader, otherName } = usePresence(reader, selectedChapter);
 
@@ -58,13 +72,13 @@ function App() {
 
       <div className="app-content">
         {tab === 'read' && !selectedChapter && (
-          <ChapterList onSelect={setSelectedChapter} />
+          <ChapterList onSelect={changeChapter} />
         )}
         {tab === 'read' && selectedChapter && (
           <ChapterDetail
             chapterId={selectedChapter}
             reader={reader}
-            onBack={() => setSelectedChapter(null)}
+            onBack={() => changeChapter(null)}
             onShowConcept={setActiveConcept}
             showToast={showToast}
           />
@@ -84,19 +98,19 @@ function App() {
       <nav className="nav-tabs">
         <button
           className={`nav-tab ${tab === 'read' ? 'active' : ''}`}
-          onClick={() => { setTab('read'); setSelectedChapter(null); }}
+          onClick={() => { changeTab('read'); changeChapter(null); }}
         >
           Read
         </button>
         <button
           className={`nav-tab ${tab === 'constellation' ? 'active' : ''}`}
-          onClick={() => setTab('constellation')}
+          onClick={() => changeTab('constellation')}
         >
           Constellation
         </button>
         <button
           className={`nav-tab ${tab === 'dreams' ? 'active' : ''}`}
-          onClick={() => setTab('dreams')}
+          onClick={() => changeTab('dreams')}
         >
           Dreams
         </button>
