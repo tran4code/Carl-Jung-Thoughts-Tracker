@@ -1,6 +1,6 @@
 import ReactionCard from './ReactionCard';
 
-export default function ReactionStream({ reactions, chapterData, onShowConcept, onUpdateReaction }) {
+export default function ReactionStream({ reactions, chapterData, onShowConcept, onUpdateReaction, reader, onAddReply, onDeleteReaction, onDeleteReply }) {
   if (reactions.length === 0) {
     return (
       <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem 0' }}>
@@ -18,6 +18,10 @@ export default function ReactionStream({ reactions, chapterData, onShowConcept, 
           chapterData={chapterData}
           onShowConcept={onShowConcept}
           onUpdate={onUpdateReaction}
+          reader={reader}
+          onAddReply={onAddReply}
+          onDeleteReaction={onDeleteReaction}
+          onDeleteReply={onDeleteReply}
         />
       ))}
     </div>

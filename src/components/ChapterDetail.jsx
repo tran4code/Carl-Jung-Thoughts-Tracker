@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useChapterReactions, useChapterProgress } from '../hooks/useFirestore';
+import { sortByPassagePosition } from '../utils/sortReactions';
 import chaptersMeta from '../data/chapters-meta.json';
 import ReactionStream from './ReactionStream';
 import ReactionInput from './ReactionInput';
@@ -14,7 +15,7 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
 
   const {
     myReactions, otherReactions, allReactions,
-    loading: reactionsLoading, addReaction, updateReaction,
+    loading: reactionsLoading, addReaction, updateReaction, addReply, deleteReaction, deleteReply,
   } = useChapterReactions(chapterId, reader);
 
   const {
@@ -75,10 +76,14 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
       ) : (
         <>
           <ReactionStream
-            reactions={myReactions}
+            reactions={sortByPassagePosition(myReactions)}
             chapterData={chapterData}
             onShowConcept={onShowConcept}
             onUpdateReaction={updateReaction}
+            reader={reader}
+            onAddReply={addReply}
+            onDeleteReaction={deleteReaction}
+            onDeleteReply={deleteReply}
           />
 
           <ChapterReveal
@@ -94,6 +99,9 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
             revealed={revealed}
             chapterData={chapterData}
             onShowConcept={onShowConcept}
+            onAddReply={addReply}
+            onDeleteReaction={deleteReaction}
+            onDeleteReply={deleteReply}
           />
         </>
       )}

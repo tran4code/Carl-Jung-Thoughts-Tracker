@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection, query, where, orderBy, onSnapshot,
-  addDoc, updateDoc, doc, serverTimestamp, getDocs,
+  addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDocs, arrayUnion, getDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -35,11 +35,35 @@ export function useReactions(chapterId) {
     return updateDoc(doc(db, 'reactions', id), data);
   }, []);
 
-  return { reactions, loading, addReaction, updateReaction };
+  const addReply = useCallback(async (reactionId, reply) => {
+    const replyData = {
+      id: `r_${Date.now()}_${reply.reader.toLowerCase()}`,
+      reader: reply.reader,
+      text: reply.text,
+      timestamp: Date.now(),
+    };
+    if (reply.audioClips) replyData.audioClips = reply.audioClips;
+    return updateDoc(doc(db, 'reactions', reactionId), {
+      replies: arrayUnion(replyData),
+    });
+  }, []);
+
+  const deleteReaction = useCallback(async (id) => {
+    return deleteDoc(doc(db, 'reactions', id));
+  }, []);
+
+  const deleteReply = useCallback(async (reactionId, replyId) => {
+    const snap = await getDoc(doc(db, 'reactions', reactionId));
+    if (!snap.exists()) return;
+    const replies = (snap.data().replies || []).filter((r) => r.id !== replyId);
+    return updateDoc(doc(db, 'reactions', reactionId), { replies });
+  }, []);
+
+  return { reactions, loading, addReaction, updateReaction, addReply, deleteReaction, deleteReply };
 }
 
 export function useChapterReactions(chapterId, currentReader) {
-  const { reactions, loading, addReaction, updateReaction } = useReactions(chapterId);
+  const { reactions, loading, addReaction, updateReaction, addReply, deleteReaction, deleteReply } = useReactions(chapterId);
 
   const myReactions = reactions.filter((r) => r.reader === currentReader);
   const otherReactions = reactions.filter((r) => r.reader !== currentReader);
@@ -51,6 +75,9 @@ export function useChapterReactions(chapterId, currentReader) {
     loading,
     addReaction,
     updateReaction,
+    addReply,
+    deleteReaction,
+    deleteReply,
   };
 }
 

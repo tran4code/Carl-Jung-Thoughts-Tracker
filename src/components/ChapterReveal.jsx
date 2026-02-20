@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactionCard from './ReactionCard';
+import { sortByPassagePosition } from '../utils/sortReactions';
 import symbolsData from '../data/symbols.json';
 
 const symbolColorMap = Object.fromEntries(symbolsData.map((s) => [s.name, s.color]));
@@ -8,7 +9,7 @@ export default function ChapterReveal({
   reader, chapterId, myReactions, otherReactions,
   bothFinished, keithFinished, danielleFinished,
   onMarkFinished, onReveal, revealed,
-  chapterData, onShowConcept,
+  chapterData, onShowConcept, onAddReply, onDeleteReaction, onDeleteReply,
 }) {
   const [confirming, setConfirming] = useState(false);
   const iFinished = reader === 'Keith' ? keithFinished : danielleFinished;
@@ -23,11 +24,7 @@ export default function ChapterReveal({
 
   // Revealed state: show interleaved timeline
   if (revealed && bothFinished) {
-    const allReactions = [...myReactions, ...otherReactions].sort((a, b) => {
-      const tA = a.timestamp?.toMillis?.() || a.timestamp?.seconds * 1000 || 0;
-      const tB = b.timestamp?.toMillis?.() || b.timestamp?.seconds * 1000 || 0;
-      return tA - tB;
-    });
+    const allReactions = sortByPassagePosition([...myReactions, ...otherReactions]);
 
     // Find shared tags
     const myTags = new Set();
@@ -49,6 +46,10 @@ export default function ChapterReveal({
                 reaction={r}
                 chapterData={chapterData}
                 onShowConcept={onShowConcept}
+                reader={reader}
+                onAddReply={onAddReply}
+                onDeleteReaction={onDeleteReaction}
+                onDeleteReply={onDeleteReply}
               />
             </div>
           ))}
