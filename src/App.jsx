@@ -5,6 +5,7 @@ import ChapterDetail from './components/ChapterDetail';
 import Constellation from './components/Constellation';
 import DreamJournal from './components/DreamJournal';
 import ConceptCard from './components/ConceptCard';
+import SymbolLayer from './components/SymbolLayer';
 import { usePresence } from './hooks/usePresence';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
   if (!reader) {
     return (
       <div className="reader-selection">
+        <SymbolLayer />
         <div className="title-page">
           <div className="title-dots">
             <span /><span /><span />
