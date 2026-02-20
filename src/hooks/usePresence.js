@@ -28,15 +28,22 @@ export function usePresence(currentReader, currentChapter) {
 
     setOnline();
 
-    window.addEventListener('beforeunload', setOffline);
-    document.addEventListener('visibilitychange', () => {
+    // Heartbeat — keep lastSeen fresh so the other client can detect staleness
+    const heartbeat = setInterval(setOnline, 30000);
+
+    const handleVisibility = () => {
       if (document.visibilityState === 'hidden') setOffline();
       else setOnline();
-    });
+    };
+
+    window.addEventListener('beforeunload', setOffline);
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
       setOffline();
+      clearInterval(heartbeat);
       window.removeEventListener('beforeunload', setOffline);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [currentReader, currentChapter]);
 

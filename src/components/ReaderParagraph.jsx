@@ -139,8 +139,8 @@ function ReaderParagraph({
       className={`reader-paragraph-wrapper fade-in${isFirst ? ' drop-cap' : ''}${dimmed ? ' section-dimmed' : ''}`}
       data-page={paragraph.page}
     >
+      <span className="reader-page-number">p.{paragraph.page}</span>
       <div className="reader-paragraph-text">
-        <span className="reader-page-number">p.{paragraph.page}</span>
         {(paragraph.sentences || []).map((s) => {
           const selected = isInRange(s.id);
           const hasReaction = sentencesWithReactions.has(s.id);

@@ -7,6 +7,7 @@ import ChapterReader from './ChapterReader';
 import ReactionStream from './ReactionStream';
 import ReactionInput from './ReactionInput';
 import ChapterReveal from './ChapterReveal';
+import SectionChecklist from './SectionChecklist';
 import DiscussionQuestions from './DiscussionQuestions';
 import ImaginationPrompt from './ImaginationPrompt';
 import MiniConstellation from './MiniConstellation';
@@ -168,6 +169,15 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
             revealed={revealed}
           />
 
+          {/* Section-level finish checklist */}
+          {chapterData?.sections && (
+            <SectionChecklist
+              sections={chapterData.sections}
+              sectionProgress={sectionProgressHook}
+              reader={reader}
+            />
+          )}
+
           <ChapterReveal
             reader={reader}
             chapterId={chapterId}
@@ -214,8 +224,10 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
             sectionMetrics={navState.sectionMetrics}
             currentSectionIndex={navState.currentSectionIndex}
             scrollProgress={navState.scrollProgress}
-            reactionPositions={navState.reactionPositions}
+            sectionScrollPositions={navState.sectionScrollPositions}
             goToSection={navState.goToSection}
+            goToPosition={navState.goToPosition}
+            sectionProgress={sectionProgressHook}
             reader={reader}
           />
           <DesktopRail

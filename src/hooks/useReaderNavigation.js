@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Shared navigation state for the chapter reader and bottom bar.
@@ -7,6 +7,8 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 export function useReaderNavigation(chapterData, readerRef, myReactions, otherReactions, revealed) {
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [sectionScrollPositions, setSectionScrollPositions] = useState([0]);
+  const lastSectionRef = useRef(0);
 
   // Build section layout with sentence counts for proportional track sizing
   const sectionMetrics = useMemo(() => {
@@ -110,6 +112,7 @@ export function useReaderNavigation(chapterData, readerRef, myReactions, otherRe
   }, [myReactions, otherReactions, revealed, sentenceIndex, sectionMetrics, totalSentences]);
 
   // Track scroll progress and current section
+  // Also record the exact scrollProgress at each section boundary for tick alignment
   useEffect(() => {
     const handleScroll = () => {
       const el = readerRef?.current;
@@ -133,12 +136,71 @@ export function useReaderNavigation(chapterData, readerRef, myReactions, otherRe
         }
       }
       setCurrentSectionIndex(currentIdx);
+
+      // Record the scrollProgress when we first scroll forward into a new section
+      // Only record once per section — never overwrite (backward scrolling would give wrong values)
+      if (currentIdx !== lastSectionRef.current) {
+        const prevIdx = lastSectionRef.current;
+        lastSectionRef.current = currentIdx;
+        if (currentIdx > prevIdx) {
+          setSectionScrollPositions((prev) => {
+            if (prev[currentIdx] != null) return prev; // already recorded
+            const next = [...prev];
+            next[currentIdx] = pct;
+            return next;
+          });
+        }
+      }
     };
+
+    // Seed all section boundary positions using the same math as the scroll handler
+    // This ensures ticks appear immediately without needing to scroll past each section
+    const seedPositions = () => {
+      const el = readerRef?.current;
+      if (!el) return;
+      const headers = el.querySelectorAll('[data-section-id]');
+      if (!headers.length) return;
+      const totalH = el.scrollHeight - window.innerHeight;
+      if (totalH <= 0) return;
+      const threshold = window.innerHeight * 0.4;
+      const readerAbsTop = el.getBoundingClientRect().top + window.scrollY;
+      const positions = Array.from(headers).map((header) => {
+        const headerAbsTop = header.getBoundingClientRect().top + window.scrollY;
+        // scrollProgress at the moment this header crosses the threshold:
+        // headerRect.top < threshold means scrolled = headerAbsTop - readerAbsTop - threshold
+        const scrolledAtSwitch = headerAbsTop - readerAbsTop - threshold;
+        return Math.max(0, Math.min(1, scrolledAtSwitch / totalH));
+      });
+      setSectionScrollPositions(positions);
+    };
+    // Run seed after layout, with retries for lazy-loaded content
+    seedPositions();
+    requestAnimationFrame(() => requestAnimationFrame(seedPositions));
+    const seedTimer = setTimeout(seedPositions, 500);
+    const seedTimer2 = setTimeout(seedPositions, 1500);
+    window.addEventListener('resize', seedPositions);
+
+    // Also observe DOM changes in case section headers appear later
+    let observer;
+    const el = readerRef?.current;
+    if (el) {
+      observer = new MutationObserver(() => {
+        const headers = el.querySelectorAll('[data-section-id]');
+        if (headers.length > 1) seedPositions();
+      });
+      observer.observe(el, { childList: true, subtree: true });
+    }
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // initial
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [readerRef]);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', seedPositions);
+      clearTimeout(seedTimer);
+      clearTimeout(seedTimer2);
+      observer?.disconnect();
+    };
+  }, [readerRef, sectionMetrics]);
 
   // Section-level scroll progress
   const sectionScrollProgress = useMemo(() => {
@@ -202,6 +264,7 @@ export function useReaderNavigation(chapterData, readerRef, myReactions, otherRe
     scrollProgress,
     sectionScrollProgress,
     sectionMetrics,
+    sectionScrollPositions,
     reactionPositions,
     totalSentences,
     pagePositions,
