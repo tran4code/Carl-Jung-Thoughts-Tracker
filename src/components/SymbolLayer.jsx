@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef } from 'react';
 
-const symbols = [
+const symbolGenerators = [
   // Mandala (quartered circle)
   () => `<svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="0.8">
     <circle cx="40" cy="40" r="30"/>
@@ -139,145 +139,295 @@ const symbols = [
 ];
 
 const MAX_SYMBOLS = 8;
+const BURST_TOTAL = 14;
 
-export default function SymbolLayer() {
+function createSymbolElement(layer, x, y) {
+  const idx = Math.floor(Math.random() * symbolGenerators.length);
+  const size = 50 + Math.random() * 60;
+  const hue = 38 + Math.random() * 12;
+  const sat = 50 + Math.random() * 20;
+  const light = 45 + Math.random() * 15;
+  const rot = Math.random() * 360;
+  const maxOpacity = 0.15 + Math.random() * 0.15;
+
+  const el = document.createElement('div');
+  el.className = 'symbol';
+  el.style.width = size + 'px';
+  el.style.height = size + 'px';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.color = `hsla(${hue}, ${sat}%, ${light}%, 1)`;
+  el.style.transform = `rotate(${rot}deg)`;
+  el.style.opacity = '0';
+  el.innerHTML = symbolGenerators[idx]();
+  layer.appendChild(el);
+
+  return { el, size, rot, maxOpacity };
+}
+
+function isInExclusionZone(x, y) {
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  const dx = Math.abs(x - cx) / (window.innerWidth * 0.28);
+  const dy = Math.abs(y - cy) / (window.innerHeight * 0.32);
+  return (dx * dx + dy * dy) < 1;
+}
+
+const SymbolLayer = forwardRef(function SymbolLayer({ burst }, ref) {
   const layerRef = useRef(null);
-  const activeRef = useRef([]);
+  const glowRef = useRef(null);
+  // Each entry: { el, startTime, fadeInDuration, holdDuration, fadeOutDuration, maxOpacity,
+  //               startX, startY, startRot, driftX, driftY, rotSpeed, totalDuration }
+  const symbolsRef = useRef([]);
   const rafRef = useRef(null);
-  const timeoutRef = useRef(null);
+  const spawnTimerRef = useRef(null);
+  const burstActiveRef = useRef(false);
 
+  // Keep the glow centered at the viewport as the user scrolls
   useEffect(() => {
+    const glow = glowRef.current;
+    if (!glow) return;
+
+    function positionGlow() {
+      const scrollY = window.scrollY;
+      const vh = window.innerHeight;
+      glow.style.top = (scrollY + vh / 2) + 'px';
+    }
+
+    positionGlow();
+    window.addEventListener('scroll', positionGlow, { passive: true });
+    window.addEventListener('resize', positionGlow, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', positionGlow);
+      window.removeEventListener('resize', positionGlow);
+    };
+  }, []);
+
+  // Burst effect using Web Animations API
+  useEffect(() => {
+    if (!burst) return;
     const layer = layerRef.current;
     if (!layer) return;
 
-    const active = activeRef.current;
+    // Stop normal spawning and animation during burst
+    burstActiveRef.current = true;
+    clearTimeout(spawnTimerRef.current);
 
-    function isInExclusionZone(x, y) {
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-      const dx = Math.abs(x - cx) / (window.innerWidth * 0.28);
-      const dy = Math.abs(y - cy) / (window.innerHeight * 0.32);
-      return (dx * dx + dy * dy) < 1;
+    const active = symbolsRef.current;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = vw / 2;
+    const cy = vh / 2;
+
+    // Phase 1: Spawn extra symbols to fill the screen at visible opacity
+    const extraNeeded = Math.max(0, BURST_TOTAL - active.length);
+    for (let i = 0; i < extraNeeded; i++) {
+      const x = Math.random() * (vw - 80);
+      const y = Math.random() * (vh - 80);
+      const { el, maxOpacity } = createSymbolElement(layer, x, y);
+      el.style.opacity = String(maxOpacity);
+      // These extras have no normal lifecycle — they exist only for the burst
+      active.push({
+        el, startTime: performance.now(), maxOpacity,
+        fadeInDuration: 0, holdDuration: Infinity, fadeOutDuration: 0,
+        startX: x, startY: y, startRot: 0, driftX: 0, driftY: 0, rotSpeed: 0,
+        totalDuration: Infinity,
+      });
+    }
+
+    // Phase 2: Brighten all symbols instantly
+    for (const s of active) {
+      s.el.style.opacity = String(Math.min(s.maxOpacity * 3, 0.55));
+    }
+
+    // Phase 3: After one paint frame, animate outward using el.animate()
+    const burstPromises = [];
+
+    requestAnimationFrame(() => {
+      for (const s of active) {
+        const rect = s.el.getBoundingClientRect();
+        const sx = rect.left + rect.width / 2;
+        const sy = rect.top + rect.height / 2;
+        const angle = Math.atan2(sy - cy, sx - cx);
+        const dist = 80 + Math.random() * 60;
+        const moveX = Math.cos(angle) * dist;
+        const moveY = Math.sin(angle) * dist;
+
+        const currentLeft = parseFloat(s.el.style.left) || 0;
+        const currentTop = parseFloat(s.el.style.top) || 0;
+        const currentOpacity = parseFloat(s.el.style.opacity) || 0;
+
+        const anim = s.el.animate([
+          { left: currentLeft + 'px', top: currentTop + 'px', opacity: currentOpacity },
+          { left: (currentLeft + moveX) + 'px', top: (currentTop + moveY) + 'px', opacity: 0 },
+        ], {
+          duration: 900,
+          easing: 'cubic-bezier(0.23, 1, 0.32, 1)',
+          fill: 'forwards',
+        });
+
+        burstPromises.push(anim.finished.then(() => s.el.remove()));
+      }
+
+      // Once all animations finish, clean up and resume normal operation
+      Promise.all(burstPromises).then(() => {
+        symbolsRef.current = [];
+        burstActiveRef.current = false;
+        // Resume normal spawning
+        scheduleSpawn();
+      });
+    });
+
+    function scheduleSpawn() {
+      if (!layerRef.current) return;
+      spawnSymbol();
+      spawnTimerRef.current = setTimeout(scheduleSpawn, 1500 + Math.random() * 3000);
     }
 
     function spawnSymbol() {
-      if (active.length >= MAX_SYMBOLS) return;
-
-      const idx = Math.floor(Math.random() * symbols.length);
-      const svgStr = symbols[idx]();
-      const size = 50 + Math.random() * 60; // slightly smaller for mobile
+      const syms = symbolsRef.current;
+      if (syms.length >= MAX_SYMBOLS) return;
+      const lyr = layerRef.current;
+      if (!lyr) return;
 
       let x, y, attempts = 0;
+      const size = 50 + Math.random() * 60;
       do {
         x = Math.random() * (window.innerWidth - size);
         y = Math.random() * (window.innerHeight - size);
         attempts++;
       } while (isInExclusionZone(x + size / 2, y + size / 2) && attempts < 20);
-
       if (attempts >= 20) return;
 
-      const el = document.createElement('div');
-      el.className = 'symbol';
-      el.style.width = size + 'px';
-      el.style.height = size + 'px';
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      el.innerHTML = svgStr;
-
-      const hue = 38 + Math.random() * 12;
-      const sat = 50 + Math.random() * 20;
-      const light = 45 + Math.random() * 15;
-      el.style.color = `hsla(${hue}, ${sat}%, ${light}%, 1)`;
-
-      const startRot = Math.random() * 360;
-      const rotSpeed = (Math.random() - 0.5) * 20;
-      el.style.transform = `rotate(${startRot}deg)`;
-
+      const { el, rot, maxOpacity } = createSymbolElement(lyr, x, y);
       const driftX = (Math.random() - 0.5) * 30;
       const driftY = -10 - Math.random() * 20;
-
-      layer.appendChild(el);
-
+      const rotSpeed = (Math.random() - 0.5) * 20;
       const fadeInDuration = 1000 + Math.random() * 1500;
       const holdDuration = 4000 + Math.random() * 5000;
       const fadeOutDuration = 2000 + Math.random() * 2000;
-      const maxOpacity = 0.15 + Math.random() * 0.15;
 
-      active.push({
-        el, startTime: performance.now(),
-        fadeInDuration, holdDuration, fadeOutDuration, maxOpacity,
-        startX: x, startY: y, startRot, driftX, driftY, rotSpeed,
+      syms.push({
+        el, startTime: performance.now(), maxOpacity,
+        fadeInDuration, holdDuration, fadeOutDuration,
+        startX: x, startY: y, startRot: rot, driftX, driftY, rotSpeed,
+        totalDuration: fadeInDuration + holdDuration + fadeOutDuration,
+      });
+    }
+  }, [burst]);
+
+  // Normal lifecycle: spawn, drift, fade in/out via RAF
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return;
+
+    const syms = symbolsRef.current;
+
+    function spawnSymbol() {
+      if (syms.length >= MAX_SYMBOLS) return;
+
+      let x, y, attempts = 0;
+      const size = 50 + Math.random() * 60;
+      do {
+        x = Math.random() * (window.innerWidth - size);
+        y = Math.random() * (window.innerHeight - size);
+        attempts++;
+      } while (isInExclusionZone(x + size / 2, y + size / 2) && attempts < 20);
+      if (attempts >= 20) return;
+
+      const { el, rot, maxOpacity } = createSymbolElement(layer, x, y);
+      const driftX = (Math.random() - 0.5) * 30;
+      const driftY = -10 - Math.random() * 20;
+      const rotSpeed = (Math.random() - 0.5) * 20;
+      const fadeInDuration = 1000 + Math.random() * 1500;
+      const holdDuration = 4000 + Math.random() * 5000;
+      const fadeOutDuration = 2000 + Math.random() * 2000;
+
+      syms.push({
+        el, startTime: performance.now(), maxOpacity,
+        fadeInDuration, holdDuration, fadeOutDuration,
+        startX: x, startY: y, startRot: rot, driftX, driftY, rotSpeed,
         totalDuration: fadeInDuration + holdDuration + fadeOutDuration,
       });
     }
 
     function updateSymbols(now) {
-      for (let i = active.length - 1; i >= 0; i--) {
-        const s = active[i];
-        const elapsed = now - s.startTime;
-        const progress = elapsed / s.totalDuration;
+      if (!burstActiveRef.current) {
+        for (let i = syms.length - 1; i >= 0; i--) {
+          const s = syms[i];
+          const elapsed = now - s.startTime;
+          const progress = elapsed / s.totalDuration;
 
-        if (progress >= 1) {
-          s.el.remove();
-          active.splice(i, 1);
-          continue;
+          if (progress >= 1) {
+            s.el.remove();
+            syms.splice(i, 1);
+            continue;
+          }
+
+          let opacity;
+          const fadeInEnd = s.fadeInDuration / s.totalDuration;
+          const holdEnd = (s.fadeInDuration + s.holdDuration) / s.totalDuration;
+
+          if (progress < fadeInEnd) {
+            const t = progress / fadeInEnd;
+            opacity = t * t * s.maxOpacity;
+          } else if (progress < holdEnd) {
+            opacity = s.maxOpacity;
+          } else {
+            const t = (progress - holdEnd) / (1 - holdEnd);
+            opacity = (1 - t * t) * s.maxOpacity;
+          }
+
+          const driftProgress = elapsed / s.totalDuration;
+          const dx = s.driftX * driftProgress;
+          const dy = s.driftY * driftProgress;
+          const rot = s.startRot + s.rotSpeed * driftProgress;
+
+          s.el.style.opacity = Math.max(0, opacity);
+          s.el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
         }
-
-        let opacity;
-        const fadeInEnd = s.fadeInDuration / s.totalDuration;
-        const holdEnd = (s.fadeInDuration + s.holdDuration) / s.totalDuration;
-
-        if (progress < fadeInEnd) {
-          const t = progress / fadeInEnd;
-          opacity = t * t * s.maxOpacity;
-        } else if (progress < holdEnd) {
-          opacity = s.maxOpacity;
-        } else {
-          const t = (progress - holdEnd) / (1 - holdEnd);
-          opacity = (1 - t * t) * s.maxOpacity;
-        }
-
-        const driftProgress = elapsed / s.totalDuration;
-        const dx = s.driftX * driftProgress;
-        const dy = s.driftY * driftProgress;
-        const rot = s.startRot + s.rotSpeed * driftProgress;
-
-        s.el.style.opacity = Math.max(0, opacity);
-        s.el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
       }
 
       rafRef.current = requestAnimationFrame(updateSymbols);
     }
 
     function scheduleSpawn() {
+      if (burstActiveRef.current) return;
       spawnSymbol();
-      const delay = 1500 + Math.random() * 3000;
-      timeoutRef.current = setTimeout(scheduleSpawn, delay);
+      spawnTimerRef.current = setTimeout(scheduleSpawn, 1500 + Math.random() * 3000);
     }
 
     rafRef.current = requestAnimationFrame(updateSymbols);
 
-    // initial burst
-    spawnSymbol();
-    setTimeout(() => spawnSymbol(), 400);
-    setTimeout(() => spawnSymbol(), 800);
-    setTimeout(() => spawnSymbol(), 1500);
-    setTimeout(() => spawnSymbol(), 2200);
-    timeoutRef.current = setTimeout(scheduleSpawn, 3000);
+    // Spawn initial batch at full opacity for immediate visibility
+    for (let i = 0; i < 5; i++) {
+      spawnSymbol();
+      // Make initial symbols visible immediately (skip fade-in)
+      const last = syms[syms.length - 1];
+      if (last) {
+        last.el.style.opacity = String(last.maxOpacity);
+        last.fadeInDuration = 0;
+        last.totalDuration = last.holdDuration + last.fadeOutDuration;
+      }
+    }
+
+    spawnTimerRef.current = setTimeout(scheduleSpawn, 1500);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
-      clearTimeout(timeoutRef.current);
-      // clean up spawned DOM elements
-      active.forEach(s => s.el.remove());
-      active.length = 0;
+      clearTimeout(spawnTimerRef.current);
+      syms.forEach(s => s.el.remove());
+      syms.length = 0;
     };
   }, []);
 
   return (
     <>
       <div className="symbol-layer" ref={layerRef} />
-      <div className="symbol-center-glow" />
+      <div className="symbol-center-glow" ref={glowRef} />
+      <div className="symbol-vignette" />
     </>
   );
-}
+});
+
+export default SymbolLayer;

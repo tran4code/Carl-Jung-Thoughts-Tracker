@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import VoiceRecorder from './VoiceRecorder';
 import TagPicker from './TagPicker';
 import PassageMatcher from './PassageMatcher';
+import PassageSuggestions from './PassageSuggestions';
+import PassageHighlight from './PassageHighlight';
 import AudioPlayer from './AudioPlayer';
+import { buildCorpusIndex, findTopMatches } from '../utils/textSimilarity';
 
 export default function ReactionInput({ reader, chapterId, chapterData, addReaction, showToast }) {
   const [text, setText] = useState('');
@@ -11,8 +14,31 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
   const [audioClips, setAudioClips] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPassage, setSelectedPassage] = useState(null);
-  const [pageOnly, setPageOnly] = useState(false);
-  const [page, setPage] = useState('');
+  const [suggestedMatches, setSuggestedMatches] = useState([]);
+  const [showManualSearch, setShowManualSearch] = useState(false);
+  const [savedText, setSavedText] = useState('');
+  const debounceRef = useRef(null);
+
+  const corpusIndex = useMemo(() => buildCorpusIndex(chapterData), [chapterData]);
+
+  // Auto-suggest passages as user types (debounced 400ms)
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!text.trim() || text.trim().length < 15 || !corpusIndex) {
+      setSuggestedMatches([]);
+      return;
+    }
+
+    debounceRef.current = setTimeout(() => {
+      const matches = findTopMatches(text, corpusIndex, 3);
+      setSuggestedMatches(matches);
+    }, 400);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [text, corpusIndex]);
 
   const handleVoiceComplete = (result) => {
     if (!result) return;
@@ -36,12 +62,25 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
     setAudioClips((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Can save if there's text, a tag, a passage, or a page number
-  const canSubmit = text.trim() || tags.length > 0 || selectedPassage || (pageOnly && page);
+  const handleSelectSuggestion = useCallback((match) => {
+    if (!match) {
+      setSelectedPassage(null);
+      return;
+    }
+    setSelectedPassage({ start: match.id, end: match.id });
+    setShowManualSearch(false);
+  }, []);
+
+  const handleManualSearch = () => {
+    setShowManualSearch(true);
+  };
+
+  const canSubmit = text.trim() || tags.length > 0 || selectedPassage;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
+    setSavedText('');
 
     try {
       await addReaction({
@@ -51,18 +90,21 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         audioClips: audioClips.length > 0 ? audioClips : null,
         audioBase64: audioClips[0]?.audioBase64 || null,
         audioMimeType: audioClips[0]?.audioMimeType || null,
-        passageStart: pageOnly ? null : (selectedPassage?.start || null),
-        passageEnd: pageOnly ? null : (selectedPassage?.end || null),
+        passageStart: selectedPassage?.start || null,
+        passageEnd: selectedPassage?.end || null,
         tags,
         isBlindReaction: false,
-        page: pageOnly && page ? parseInt(page, 10) : null,
+        page: null,
       });
+      setSavedText('Saved');
       setText('');
       setTags([]);
       setRawTranscription(null);
       setAudioClips([]);
       setSelectedPassage(null);
-      setPage('');
+      setSuggestedMatches([]);
+      setShowManualSearch(false);
+      setTimeout(() => setSavedText(''), 2000);
     } catch {
       showToast('Failed to save reaction', true);
     } finally {
@@ -70,12 +112,16 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
     }
   };
 
+  // If a passage is selected (from suggestion or manual), show it as a highlight preview
+  const showSuggestions = suggestedMatches.length > 0 && !selectedPassage && !showManualSearch;
+  const showSelectedPreview = selectedPassage && !showManualSearch;
+
   return (
     <div className="reaction-input">
-      {/* 1. Tags first — set the intention */}
+      {/* 1. Tags — set the intention */}
       <TagPicker selected={tags} onChange={setTags} />
 
-      {/* 2. Reaction text (optional) */}
+      {/* 2. Reflection textarea */}
       <textarea
         placeholder="What's on your mind? (optional)"
         value={text}
@@ -85,7 +131,7 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
       />
 
       {rawTranscription && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
+        <div className="ri-transcription-label">
           Transcription loaded — edit above if needed
         </div>
       )}
@@ -114,52 +160,55 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         showToast={showToast}
       />
 
-      {/* 3. Passage toggle: find passage or just a page number */}
-      <div className="ri-passage-toggle">
-        <button
-          className={`ri-toggle-btn${!pageOnly ? ' active' : ''}`}
-          onClick={() => { setPageOnly(false); setPage(''); }}
-        >
-          Find Passage
-        </button>
-        <button
-          className={`ri-toggle-btn${pageOnly ? ' active' : ''}`}
-          onClick={() => { setPageOnly(true); setSelectedPassage(null); }}
-        >
-          Page Only
-        </button>
-      </div>
+      {/* 3. Auto-suggested passages */}
+      {showSuggestions && (
+        <PassageSuggestions
+          matches={suggestedMatches}
+          onSelect={handleSelectSuggestion}
+          onManualSearch={handleManualSearch}
+        />
+      )}
 
-      {pageOnly ? (
-        <div className="ri-page-input">
-          <label className="ri-page-label">p.</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder="Page #"
-            value={page}
-            onChange={(e) => setPage(e.target.value)}
-          />
-        </div>
-      ) : (
-        chapterData && (
-          <PassageMatcher
+      {/* Selected passage preview with expand controls */}
+      {showSelectedPreview && chapterData && (
+        <div className="ri-selected-passage">
+          <PassageHighlight
             chapterData={chapterData}
-            reactionText={text}
-            onSelect={setSelectedPassage}
-            selectedPassage={selectedPassage}
-            onPassageExpand={setSelectedPassage}
+            passageStart={selectedPassage.start}
+            passageEnd={selectedPassage.end}
+            onUpdate={(_, updates) => {
+              if (updates.passageStart) setSelectedPassage((p) => ({ ...p, start: updates.passageStart }));
+              if (updates.passageEnd) setSelectedPassage((p) => ({ ...p, end: updates.passageEnd }));
+            }}
+            reactionId="preview"
           />
-        )
+          <button
+            className="ri-clear-passage"
+            onClick={() => { setSelectedPassage(null); setShowManualSearch(false); }}
+          >
+            Clear passage
+          </button>
+        </div>
+      )}
+
+      {/* Manual search fallback */}
+      {showManualSearch && !selectedPassage && chapterData && (
+        <PassageMatcher
+          chapterData={chapterData}
+          reactionText={text}
+          onSelect={(p) => { setSelectedPassage(p); setShowManualSearch(false); }}
+          selectedPassage={selectedPassage}
+          onPassageExpand={setSelectedPassage}
+        />
       )}
 
       {/* Submit */}
       <button
-        className="btn btn-primary"
+        className={`btn btn-primary${savedText ? ' saved' : ''}`}
         onClick={handleSubmit}
         disabled={submitting || !canSubmit}
       >
-        {submitting ? 'Saving...' : 'Save'}
+        {savedText || (submitting ? 'Saving...' : 'Save')}
       </button>
     </div>
   );

@@ -73,7 +73,21 @@ export default function PassageHighlight({
     <div className="passage-container">
       <div className="passage-body">
         <div className="passage-content">
-          {/* Peek above — partially readable preview */}
+          {/* Top controls — expand/trim above */}
+          <div className="passage-edge-controls top">
+            {canExpandUp && (
+              <button className="passage-edge-btn" onClick={expandUp}>
+                <span className="passage-edge-icon">&uarr;</span> Show more above
+              </button>
+            )}
+            {canTrim && (
+              <button className="passage-edge-btn trim" onClick={trimTop}>
+                <span className="passage-edge-icon">&darr;</span> Show less
+              </button>
+            )}
+          </div>
+
+          {/* Peek above — tappable preview */}
           {peekAbove && (
             <div className="passage-peek above" onClick={expandUp}>
               {peekAbove.text}
@@ -87,48 +101,26 @@ export default function PassageHighlight({
             ))}
           </div>
 
-          {/* Peek below — partially readable preview */}
+          {/* Peek below — tappable preview */}
           {peekBelow && (
             <div className="passage-peek below" onClick={expandDown}>
               {peekBelow.text}
             </div>
           )}
-        </div>
 
-        {/* Fixed button stack on the right — always same 4 positions */}
-        <div className="passage-controls">
-          <button
-            className="passage-ctrl-btn"
-            onClick={expandUp}
-            disabled={!canExpandUp}
-            title="Add sentence above"
-          >
-            +&#x25B2;
-          </button>
-          <button
-            className="passage-ctrl-btn"
-            onClick={trimTop}
-            disabled={!canTrim}
-            title="Remove first sentence"
-          >
-            &minus;&#x25B2;
-          </button>
-          <button
-            className="passage-ctrl-btn"
-            onClick={trimBottom}
-            disabled={!canTrim}
-            title="Remove last sentence"
-          >
-            &minus;&#x25BC;
-          </button>
-          <button
-            className="passage-ctrl-btn"
-            onClick={expandDown}
-            disabled={!canExpandDown}
-            title="Add sentence below"
-          >
-            +&#x25BC;
-          </button>
+          {/* Bottom controls — expand/trim below */}
+          <div className="passage-edge-controls bottom">
+            {canTrim && (
+              <button className="passage-edge-btn trim" onClick={trimBottom}>
+                <span className="passage-edge-icon">&uarr;</span> Show less
+              </button>
+            )}
+            {canExpandDown && (
+              <button className="passage-edge-btn" onClick={expandDown}>
+                <span className="passage-edge-icon">&darr;</span> Show more below
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

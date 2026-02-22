@@ -87,6 +87,31 @@ function cosineSimilarity(vecA, vecB) {
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
 
+export function getMatchedWords(queryText, passageText) {
+  const qTokens = new Set(tokenize(queryText));
+  const pTokens = tokenize(passageText);
+  const matched = new Set();
+  for (const pt of pTokens) {
+    if (qTokens.has(pt)) {
+      matched.add(pt);
+    } else {
+      for (const qt of qTokens) {
+        if (pt.startsWith(qt) || qt.startsWith(pt)) {
+          matched.add(pt);
+          break;
+        }
+      }
+    }
+  }
+  return [...matched];
+}
+
+export function getConfidenceLabel(score) {
+  if (score > 0.4) return 'Strong match';
+  if (score > 0.15) return 'Likely match';
+  return 'Possible';
+}
+
 export function findTopMatches(queryText, corpusIndex, k = 3) {
   if (!corpusIndex || !queryText?.trim()) return [];
 
@@ -109,11 +134,16 @@ export function findTopMatches(queryText, corpusIndex, k = 3) {
     score: cosineSimilarity(queryVec, vec),
   }));
 
-  // Return top k with score > 0
+  // Return top k with score > 0, include matched words
   return scored
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, k);
+    .slice(0, k)
+    .map((s) => ({
+      ...s,
+      matchedWords: getMatchedWords(queryText, s.text),
+      confidence: getConfidenceLabel(s.score),
+    }));
 }
 
 // Fuse.js fuzzy search — better for OCR text with character-level noise
