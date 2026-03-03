@@ -5,20 +5,21 @@
 }
 
 :root {
-  --bg-deep: #0e0f13;
-  --bg-primary: #0e0f13;
-  --bg-page: #151720;
-  --bg-secondary: #151720;
-  --bg-surface: #1a1c27;
-  --bg-card: #1a1c27;
-  --bg-input: #13141c;
-  --bg-elevated: #1a1c27;
-  --text-primary: #d4cfc4;
-  --text-body: #b8b2a6;
-  --text-muted: #6e6a60;
-  --text-secondary: #6e6a60;
-  --text-dim: #4a473f;
-  --text-faint: #35332d;
+  /* Dark theme (brightened) */
+  --bg-deep: #161821;
+  --bg-primary: #161821;
+  --bg-page: #1c1e2a;
+  --bg-secondary: #1c1e2a;
+  --bg-surface: #222435;
+  --bg-card: #222435;
+  --bg-input: #1a1c28;
+  --bg-elevated: #262840;
+  --text-primary: #e0dbd0;
+  --text-body: #c8c2b4;
+  --text-muted: #8a857a;
+  --text-secondary: #8a857a;
+  --text-dim: #5e5a50;
+  --text-faint: #44413a;
   --gold: #c9a84c;
   --accent-gold: #c9a84c;
   --accent-gold-soft: rgba(201, 168, 76, 0.15);
@@ -31,10 +32,10 @@
   --accent-blue: #4a6a8a;
   --keith: #c9a84c;
   --danielle: #a0566b;
-  --border: rgba(201, 168, 76, 0.08);
-  --border-subtle: rgba(201, 168, 76, 0.08);
-  --border-mid: rgba(201, 168, 76, 0.12);
-  --border-strong: rgba(201, 168, 76, 0.2);
+  --border: rgba(201, 168, 76, 0.10);
+  --border-subtle: rgba(201, 168, 76, 0.10);
+  --border-mid: rgba(201, 168, 76, 0.15);
+  --border-strong: rgba(201, 168, 76, 0.25);
   --font-display: 'Cormorant Garamond', 'Georgia', serif;
   --font-body: 'EB Garamond', 'Georgia', serif;
   --font-note: 'Spectral', 'Georgia', serif;
@@ -43,8 +44,47 @@
   --radius-lg: 3px;
 }
 
+/* Light theme — warm cream */
+[data-theme="light"] {
+  --bg-deep: #F5F0E8;
+  --bg-primary: #F5F0E8;
+  --bg-page: #FAF6F1;
+  --bg-secondary: #EDE8DF;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #FAF6F1;
+  --bg-elevated: #ffffff;
+  --text-primary: #2c2820;
+  --text-body: #3d3830;
+  --text-muted: #7a7268;
+  --text-secondary: #7a7268;
+  --text-dim: #a49e94;
+  --text-faint: #c8c2b8;
+  --gold: #9a7d2e;
+  --accent-gold: #9a7d2e;
+  --accent-gold-soft: rgba(154, 125, 46, 0.10);
+  --accent-gold-glow: rgba(154, 125, 46, 0.04);
+  --accent-gold-border: rgba(154, 125, 46, 0.20);
+  --gold-dim: rgba(154, 125, 46, 0.15);
+  --gold-glow: rgba(154, 125, 46, 0.04);
+  --accent-rose: #8a4058;
+  --accent-rose-soft: rgba(138, 64, 88, 0.08);
+  --accent-blue: #3a5a7a;
+  --keith: #9a7d2e;
+  --danielle: #8a4058;
+  --border: rgba(60, 50, 30, 0.08);
+  --border-subtle: rgba(60, 50, 30, 0.06);
+  --border-mid: rgba(60, 50, 30, 0.10);
+  --border-strong: rgba(60, 50, 30, 0.18);
+  --bg-margin: rgba(200, 180, 120, 0.06);
+}
+
 html {
   font-size: 17px;
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -85,6 +125,32 @@ body::after {
   background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(74, 106, 138, 0.05), transparent),
               radial-gradient(ellipse 60% 80% at 80% 90%, rgba(196, 120, 138, 0.04), transparent),
               radial-gradient(ellipse 50% 50% at 50% 50%, rgba(212, 168, 67, 0.06), transparent);
+}
+
+/* Light mode: soften grain + gradient */
+[data-theme="light"] body::before {
+  opacity: 0.015;
+}
+[data-theme="light"] body::after {
+  background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(74, 106, 138, 0.03), transparent),
+              radial-gradient(ellipse 60% 80% at 80% 90%, rgba(196, 120, 138, 0.02), transparent),
+              radial-gradient(ellipse 50% 50% at 50% 50%, rgba(212, 168, 67, 0.03), transparent);
+}
+
+/* Light mode — quoted passage text stronger */
+[data-theme="light"] .passage-text {
+  color: #2c2820;
+  font-weight: 500;
+}
+[data-theme="light"] .passage-container {
+  background: rgba(154, 125, 46, 0.06);
+  border-left-color: rgba(154, 125, 46, 0.35);
+}
+[data-theme="light"] .suggestion-text {
+  color: var(--text-body);
+}
+[data-theme="light"] .suggestion-card.selected .suggestion-text {
+  color: var(--text-primary);
 }
 
 #root {
@@ -164,6 +230,33 @@ textarea {
   width: 100%;
   margin: 0 auto;
   overflow: visible;
+}
+
+/* Theme toggle — top right */
+.theme-toggle {
+  position: fixed;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 1000;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.3s, border-color 0.3s, background 0.3s;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle:hover {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold-border);
+}
+.theme-toggle svg {
+  display: block;
 }
 
 /* Navigation — bottom bar */
@@ -725,8 +818,10 @@ textarea {
 .detail-header {
   max-width: 620px;
   margin: 0 auto 3rem;
-  padding-bottom: 2.5rem;
-  border-bottom: 1px solid var(--border);
+  padding: 2rem 1.8rem 2.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg);
 }
 
 .detail-chapter-num {
@@ -1042,7 +1137,7 @@ textarea {
   font-family: var(--font-display);
   font-size: 0.92rem;
   line-height: 1.85;
-  color: #d4cfc4;
+  color: var(--text-primary);
   font-style: normal;
 }
 
@@ -1052,7 +1147,7 @@ textarea {
   font-size: 0.85rem;
   line-height: 1.85;
   font-style: italic;
-  color: rgba(180, 170, 158, 0.4);
+  color: var(--text-dim);
   cursor: pointer;
   transition: opacity 0.2s;
   padding: 0.4rem 0;
@@ -1768,9 +1863,11 @@ textarea {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 70vmin;
-  height: 70vmin;
-  background: radial-gradient(circle, rgba(201, 168, 76, 0.07) 0%, transparent 70%);
+  width: 110vmin;
+  height: 110vmin;
+  background:
+    radial-gradient(circle, rgba(255, 240, 200, 0.08) 0%, transparent 18%),
+    radial-gradient(circle, rgba(201, 168, 76, 0.35) 0%, rgba(201, 168, 76, 0.15) 25%, rgba(201, 168, 76, 0.06) 50%, transparent 72%);
   z-index: 4;
   pointer-events: none;
   animation: lampOn 3.2s ease-out both;
@@ -1789,7 +1886,6 @@ textarea {
   19% {
     opacity: 0.4;
     transform: translate(-50%, -50%) scale(0.6);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
   }
   21% {
     opacity: 0;
@@ -1798,7 +1894,6 @@ textarea {
   26% {
     opacity: 0.6;
     transform: translate(-50%, -50%) scale(0.7);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.10) 0%, transparent 70%);
   }
   28% {
     opacity: 0.1;
@@ -1807,49 +1902,31 @@ textarea {
   33% {
     opacity: 0.3;
     transform: translate(-50%, -50%) scale(0.6);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.05) 0%, transparent 70%);
   }
   /* light catches — full bloom */
   42% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(0.9);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.14) 0%, transparent 70%);
   }
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.05);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.20) 0%, transparent 70%);
   }
   58% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.15);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.22) 0%, transparent 70%);
   }
   65% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.18);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.18) 0%, transparent 70%);
-  }
-  /* gradual settle — no choppiness */
-  72% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.12);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.14) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(1.1);
   }
   80% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.07);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.11) 0%, transparent 70%);
-  }
-  90% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.03);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.09) 0%, transparent 70%);
+    transform: translate(-50%, -50%) scale(1.04);
   }
   100% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
-    background: radial-gradient(circle, rgba(201, 168, 76, 0.07) 0%, transparent 70%);
   }
 }
 
@@ -2550,6 +2627,28 @@ textarea {
   border-left-width: 3px;
 }
 
+/* Placeholder cards */
+.suggestion-card.placeholder {
+  cursor: default;
+  border-color: rgba(201, 168, 76, 0.05);
+  background: rgba(201, 168, 76, 0.01);
+}
+.suggestion-card.placeholder:hover {
+  border-color: rgba(201, 168, 76, 0.05);
+  background: rgba(201, 168, 76, 0.01);
+}
+.placeholder-line {
+  height: 0.55rem;
+  border-radius: 3px;
+  background: rgba(201, 168, 76, 0.06);
+  margin-bottom: 0.4rem;
+  width: 85%;
+}
+.placeholder-line.short {
+  width: 50%;
+  margin-bottom: 0;
+}
+
 .suggestion-text {
   font-family: var(--font-body);
   font-size: 0.88rem;
@@ -2725,6 +2824,7 @@ textarea {
   color: var(--accent-gold);
 }
 
+/* Passage hint row */
 /* Save button saved state */
 .reaction-input .btn-primary.saved,
 .inline-reaction-input .btn-primary.saved {

@@ -113,7 +113,7 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
   };
 
   // If a passage is selected (from suggestion or manual), show it as a highlight preview
-  const showSuggestions = suggestedMatches.length > 0 && !selectedPassage && !showManualSearch;
+  const showSuggestionsPanel = !selectedPassage && !showManualSearch && chapterData;
   const showSelectedPreview = selectedPassage && !showManualSearch;
 
   return (
@@ -160,12 +160,13 @@ export default function ReactionInput({ reader, chapterId, chapterData, addReact
         showToast={showToast}
       />
 
-      {/* 3. Auto-suggested passages */}
-      {showSuggestions && (
+      {/* 3. Passage suggestions — always visible as placeholders, fill in with matches */}
+      {showSuggestionsPanel && (
         <PassageSuggestions
           matches={suggestedMatches}
           onSelect={handleSelectSuggestion}
           onManualSearch={handleManualSearch}
+          idle={suggestedMatches.length === 0}
         />
       )}
 

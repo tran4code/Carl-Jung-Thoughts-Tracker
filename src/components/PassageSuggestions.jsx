@@ -27,39 +27,49 @@ export default function PassageSuggestions({
   matches,
   onSelect,
   onManualSearch,
+  idle,
 }) {
-  const visible = matches && matches.length > 0;
+  const hasMatches = matches && matches.length > 0;
 
   return (
-    <div className={`suggestions-panel${visible ? ' visible' : ''}`}>
+    <div className={`suggestions-panel visible`}>
       <div className="suggestions-header">
         <span className="suggestions-label">Matching passages</span>
         <span className="suggestions-matching">
-          {matches?.length || 0} found in this chapter
+          {idle
+            ? 'appear as you type'
+            : `${matches?.length || 0} found in this chapter`}
         </span>
       </div>
 
       <div className="suggestions-container">
-        {(matches || []).map((m) => (
-          <div
-            key={m.id}
-            className="suggestion-card"
-            onClick={() => onSelect(m)}
-          >
-            <div className="suggestion-text">
-              <HighlightedText text={m.text} matchedWords={m.matchedWords} />
-            </div>
+        {hasMatches
+          ? (matches || []).map((m) => (
+              <div
+                key={m.id}
+                className="suggestion-card"
+                onClick={() => onSelect(m)}
+              >
+                <div className="suggestion-text">
+                  <HighlightedText text={m.text} matchedWords={m.matchedWords} />
+                </div>
 
-            <div className="suggestion-meta">
-              <span className="suggestion-page">p. {m.page}</span>
-              <span className="suggestion-confidence">{m.confidence}</span>
-            </div>
-          </div>
-        ))}
+                <div className="suggestion-meta">
+                  <span className="suggestion-page">p. {m.page}</span>
+                  <span className="suggestion-confidence">{m.confidence}</span>
+                </div>
+              </div>
+            ))
+          : Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="suggestion-card placeholder">
+                <div className="placeholder-line" />
+                <div className="placeholder-line short" />
+              </div>
+            ))}
       </div>
 
       <div className="manual-search-link" onClick={onManualSearch}>
-        None of these? Search manually &rarr;
+        {hasMatches ? 'None of these? ' : ''}Search manually &rarr;
       </div>
     </div>
   );
