@@ -6,6 +6,7 @@ import chaptersMeta from '../data/chapters-meta.json';
 import ChapterReader from './ChapterReader';
 import ReactionStream from './ReactionStream';
 import ReactionInput from './ReactionInput';
+import ReactionFlow from './ReactionFlow';
 import ChapterReveal from './ChapterReveal';
 import SectionChecklist from './SectionChecklist';
 import DiscussionQuestions from './DiscussionQuestions';
@@ -146,58 +147,25 @@ export default function ChapterDetail({ chapterId, reader, onBack, onShowConcept
           />
         </>
       ) : (
-        <>
-          {!iFinished && (
-            <ReactionInput
-              reader={reader}
-              chapterId={chapterId}
-              chapterData={chapterData}
-              addReaction={addReaction}
-              showToast={showToast}
-            />
-          )}
-
-          <ReactionStream
-            reactions={sortByPassagePosition(allReactions)}
-            chapterData={chapterData}
-            onShowConcept={onShowConcept}
-            onUpdateReaction={updateReaction}
-            reader={reader}
-            onAddReply={addReply}
-            onDeleteReaction={deleteReaction}
-            onDeleteReply={deleteReply}
-            revealed={revealed}
-          />
-
-          {/* Section-level finish checklist */}
-          {chapterData?.sections && (
-            <SectionChecklist
-              sections={chapterData.sections}
-              chapterData={chapterData}
-              sectionProgress={sectionProgressHook}
-              reader={reader}
-              otherReactions={otherReactions}
-            />
-          )}
-
-          <ChapterReveal
-            reader={reader}
-            chapterId={chapterId}
-            myReactions={myReactions}
-            otherReactions={otherReactions}
-            bothFinished={bothFinished}
-            keithFinished={keithFinished}
-            danielleFinished={danielleFinished}
-            onMarkFinished={handleMarkFinished}
-            onReveal={handleReveal}
-            revealed={revealed}
-            chapterData={chapterData}
-            onShowConcept={onShowConcept}
-            onAddReply={addReply}
-            onDeleteReaction={deleteReaction}
-            onDeleteReply={deleteReply}
-          />
-        </>
+        <ReactionFlow
+          reader={reader}
+          chapterId={chapterId}
+          chapterData={chapterData}
+          meta={meta}
+          sections={chapterData?.sections || meta?.sections || []}
+          myReactions={myReactions}
+          otherReactions={otherReactions}
+          allReactions={allReactions}
+          addReaction={addReaction}
+          updateReaction={updateReaction}
+          addReply={addReply}
+          deleteReaction={deleteReaction}
+          deleteReply={deleteReply}
+          sectionProgress={sectionProgressHook}
+          onShowConcept={onShowConcept}
+          showToast={showToast}
+          revealed={revealed}
+        />
       )}
 
       {revealed && (
