@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/jung-reading-companion-owLDi]
+    branches: [claude/jung-reading-companion-owLDi, claude/redesign-reaction-flow-MCtCi]
 
 permissions:
   contents: read
