@@ -1,9 +1,6 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import PresenceIndicator from './components/PresenceIndicator';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import ChapterList from './components/ChapterList';
 import ChapterDetail from './components/ChapterDetail';
-import Constellation from './components/Constellation';
-import DreamJournal from './components/DreamJournal';
 import ConceptCard from './components/ConceptCard';
 import SymbolLayer from './components/SymbolLayer';
 import { usePresence } from './hooks/usePresence';
@@ -309,7 +306,6 @@ function ThemeToggle() {
 
 function App() {
   const [reader, setReader] = useState(() => localStorage.getItem('jung-reader'));
-  const [tab, setTab] = useState(() => sessionStorage.getItem('jung-tab') || 'read');
   const [selectedChapter, setSelectedChapter] = useState(() => {
     const saved = sessionStorage.getItem('jung-chapter');
     return saved ? Number(saved) : null;
@@ -351,11 +347,6 @@ function App() {
     return () => window.removeEventListener('scroll', updateCoverFade);
   }, [reader, selectedChapter]);
 
-  const changeTab = (t) => {
-    setTab(t);
-    sessionStorage.setItem('jung-tab', t);
-  };
-
   const TRANSITION_EXIT_MS = 700;
   const TRANSITION_ENTER_MS = 800;
 
@@ -394,7 +385,7 @@ function App() {
     }, TRANSITION_EXIT_MS);
   }, [transition, selectedChapter]);
 
-  const { otherReader, otherName } = usePresence(reader, selectedChapter);
+  usePresence(reader, selectedChapter);
 
   const showToast = useCallback((message, isError = false) => {
     setToast({ message, isError });
@@ -438,42 +429,6 @@ function App() {
             showToast={showToast}
           />
         </div>
-        <nav className="nav-tabs">
-          <div className="nav-tabs-main">
-            <button
-              className={`nav-tab ${tab === 'read' ? 'active' : ''}`}
-              onClick={() => { changeTab('read'); changeChapter(null); }}
-            >
-              Read
-            </button>
-            <button
-              className={`nav-tab ${tab === 'constellation' ? 'active' : ''}`}
-              onClick={() => changeTab('constellation')}
-            >
-              Constellation
-            </button>
-            <button
-              className={`nav-tab ${tab === 'dreams' ? 'active' : ''}`}
-              onClick={() => changeTab('dreams')}
-            >
-              Dreams
-            </button>
-          </div>
-          <div className="nav-tabs-reader">
-            <PresenceIndicator otherReader={otherReader} otherName={otherName} />
-            <span className={`reader-badge ${reader.toLowerCase()}`}>{reader}</span>
-            <button
-              className="nav-switch-btn"
-              onClick={() => {
-                localStorage.removeItem('jung-reader');
-                setReader(null);
-                setSymbolBurst(false);
-              }}
-            >
-              switch
-            </button>
-          </div>
-        </nav>
         {activeConcept && (
           <ConceptCard conceptKey={activeConcept} onClose={() => setActiveConcept(null)} />
         )}
@@ -535,58 +490,8 @@ function App() {
       {reader && (
         <div className="app-below-cover" ref={chaptersRef}>
           <div className="app-content">
-            {tab === 'read' && (
-              <ChapterList onSelect={changeChapter} skipEntry={transition === 'entering'} />
-            )}
-            {tab === 'constellation' && (
-              <Constellation onShowConcept={setActiveConcept} />
-            )}
-            {tab === 'dreams' && (
-              <DreamJournal
-                reader={reader}
-                onShowConcept={setActiveConcept}
-                showToast={showToast}
-              />
-            )}
+            <ChapterList onSelect={changeChapter} skipEntry={transition === 'entering'} />
           </div>
-
-          <nav className="nav-tabs">
-            <div className="nav-tabs-main">
-              <button
-                className={`nav-tab ${tab === 'read' ? 'active' : ''}`}
-                onClick={() => changeTab('read')}
-              >
-                Read
-              </button>
-              <button
-                className={`nav-tab ${tab === 'constellation' ? 'active' : ''}`}
-                onClick={() => changeTab('constellation')}
-              >
-                Constellation
-              </button>
-              <button
-                className={`nav-tab ${tab === 'dreams' ? 'active' : ''}`}
-                onClick={() => changeTab('dreams')}
-              >
-                Dreams
-              </button>
-            </div>
-            <div className="nav-tabs-reader">
-              <PresenceIndicator otherReader={otherReader} otherName={otherName} />
-              <span className={`reader-badge ${reader.toLowerCase()}`}>{reader}</span>
-              <button
-                className="nav-switch-btn"
-                onClick={() => {
-                  localStorage.removeItem('jung-reader');
-                  setReader(null);
-                  setSymbolBurst(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-              >
-                switch
-              </button>
-            </div>
-          </nav>
         </div>
       )}
 

@@ -5,37 +5,37 @@
 }
 
 :root {
-  /* Dark theme (brightened) */
-  --bg-deep: #161821;
-  --bg-primary: #161821;
-  --bg-page: #1c1e2a;
-  --bg-secondary: #1c1e2a;
-  --bg-surface: #222435;
-  --bg-card: #222435;
-  --bg-input: #1a1c28;
-  --bg-elevated: #262840;
-  --text-primary: #e0dbd0;
-  --text-body: #c8c2b4;
-  --text-muted: #8a857a;
-  --text-secondary: #8a857a;
-  --text-dim: #5e5a50;
-  --text-faint: #44413a;
-  --gold: #c9a84c;
-  --accent-gold: #c9a84c;
-  --accent-gold-soft: rgba(201, 168, 76, 0.15);
-  --accent-gold-glow: rgba(201, 168, 76, 0.06);
-  --accent-gold-border: rgba(201, 168, 76, 0.2);
-  --gold-dim: rgba(201, 168, 76, 0.2);
-  --gold-glow: rgba(201, 168, 76, 0.06);
+  /* Dark theme — warm neutral */
+  --bg-deep: #0F0F14;
+  --bg-primary: #0F0F14;
+  --bg-page: #141418;
+  --bg-secondary: #141418;
+  --bg-surface: #1A1A20;
+  --bg-card: #1A1A20;
+  --bg-input: #151518;
+  --bg-elevated: #1E1E25;
+  --text-primary: #D4CFC4;
+  --text-body: #C4BFB4;
+  --text-muted: #8A8579;
+  --text-secondary: #8A8579;
+  --text-dim: #6B6560;
+  --text-faint: #4A4540;
+  --gold: #D4A843;
+  --accent-gold: #D4A843;
+  --accent-gold-soft: rgba(212, 168, 67, 0.15);
+  --accent-gold-glow: rgba(212, 168, 67, 0.06);
+  --accent-gold-border: rgba(212, 168, 67, 0.2);
+  --gold-dim: rgba(212, 168, 67, 0.2);
+  --gold-glow: rgba(212, 168, 67, 0.06);
   --accent-rose: #a0566b;
   --accent-rose-soft: rgba(160, 86, 107, 0.12);
-  --accent-blue: #4a6a8a;
-  --keith: #c9a84c;
+  --accent-blue: #6B9BD2;
+  --keith: #D4A843;
   --danielle: #a0566b;
-  --border: rgba(201, 168, 76, 0.10);
-  --border-subtle: rgba(201, 168, 76, 0.10);
-  --border-mid: rgba(201, 168, 76, 0.15);
-  --border-strong: rgba(201, 168, 76, 0.25);
+  --border: rgba(212, 207, 196, 0.08);
+  --border-subtle: rgba(212, 207, 196, 0.06);
+  --border-mid: rgba(212, 207, 196, 0.12);
+  --border-strong: rgba(212, 207, 196, 0.18);
   --font-display: 'Cormorant Garamond', 'Georgia', serif;
   --font-body: 'EB Garamond', 'Georgia', serif;
   --font-note: 'Spectral', 'Georgia', serif;
@@ -4490,6 +4490,8 @@ textarea {
    ═══════════════════════════════════════════ */
 
 .rf {
+  --radius-lg: 14px;
+  --radius: 10px;
   position: relative;
   min-height: 60vh;
 }
@@ -4597,7 +4599,7 @@ textarea {
 
 /* ── Sections list ── */
 .rf-sections {
-  padding: 0.75rem 1.25rem 7.5rem;
+  padding: 0.75rem 1.25rem 5rem;
 }
 
 .rf-sections-label {
@@ -4616,6 +4618,9 @@ textarea {
   border: 1.5px solid var(--border-subtle);
   background: var(--bg-card);
   transition: all 0.2s ease;
+}
+.rf-section-card:not(.unlocked):not(.current) {
+  background: rgba(212, 207, 196, 0.02);
 }
 .rf-section-card.unlocked {
   border-color: var(--accent-gold-border);
@@ -4666,6 +4671,15 @@ textarea {
 .rf-section-title.waiting { color: var(--text-secondary); }
 .rf-section-title.future { color: var(--text-dim); }
 
+.rf-section-pages {
+  margin-top: 0.25rem;
+  font-size: 0.5rem;
+  color: var(--text-faint);
+}
+.rf-section-pages.indented {
+  margin-left: 1rem;
+}
+
 .rf-section-status {
   display: flex;
   align-items: center;
@@ -4676,6 +4690,9 @@ textarea {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
+}
+.rf-section-status.indented {
+  margin-left: 1rem;
 }
 
 .rf-status-dot {
@@ -4837,7 +4854,7 @@ textarea {
 
 .rf-tags-heading {
   font-family: var(--font-display);
-  font-size: 2.1rem;
+  font-size: 2.25rem;
   font-weight: 300;
   color: var(--text-primary);
   line-height: 1.2;
@@ -4849,6 +4866,28 @@ textarea {
   color: var(--text-dim);
   font-style: italic;
   margin-bottom: 1.5rem;
+}
+
+/* Pull quote on tag screen */
+.rf-pull-quote {
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-lg);
+  border-left: 2px solid var(--accent-gold-border);
+  background: var(--accent-gold-glow);
+  margin-bottom: 1rem;
+}
+
+.rf-pull-quote-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.rf-pull-quote-meta {
+  margin-top: 0.5rem;
+  font-size: 0.45rem;
+  color: var(--text-faint);
 }
 
 .rf-tags-count {

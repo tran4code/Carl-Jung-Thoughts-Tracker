@@ -84,6 +84,34 @@ export default function ReactionFlow({
     });
   }, [flowSections, sectionProgress, reader]);
 
+  // Compute page ranges per section
+  const sectionPageRanges = useMemo(() => {
+    if (!chapterData?.paragraphs || !chapterData?.sections) return {};
+    const { paragraphs, sections: chapSections } = chapterData;
+    const ranges = {};
+    for (let i = 0; i < chapSections.length; i++) {
+      const sec = chapSections[i];
+      const startIdx = paragraphs.findIndex((p) => p.id === sec.startParagraph);
+      if (startIdx === -1) continue;
+      const nextSec = chapSections[i + 1];
+      const endIdx = nextSec
+        ? paragraphs.findIndex((p) => p.id === nextSec.startParagraph)
+        : paragraphs.length;
+      const sectionParas = paragraphs.slice(
+        startIdx,
+        endIdx === -1 ? undefined : endIdx
+      );
+      const pages = sectionParas.map((p) => p.page).filter(Boolean);
+      if (pages.length) {
+        ranges[sec.id] = {
+          start: Math.min(...pages),
+          end: Math.max(...pages),
+        };
+      }
+    }
+    return ranges;
+  }, [chapterData]);
+
   // Count reactions per section
   const reactionsBySection = useMemo(() => {
     if (!chapterData?.paragraphs || !allReactions?.length) return {};
@@ -125,6 +153,36 @@ export default function ReactionFlow({
     }
     return map;
   }, [chapterData, allReactions, myReactions, otherReactions]);
+
+  // Get a representative passage for the selected section (for pull quote)
+  const sectionPullQuote = useMemo(() => {
+    if (!selectedSection || !chapterData?.paragraphs || !chapterData?.sections)
+      return null;
+    const { paragraphs, sections: chapSections } = chapterData;
+    const secIdx = chapSections.findIndex((s) => s.id === selectedSection.id);
+    if (secIdx === -1) return null;
+    const sec = chapSections[secIdx];
+    const startIdx = paragraphs.findIndex(
+      (p) => p.id === sec.startParagraph
+    );
+    if (startIdx === -1) return null;
+    const nextSec = chapSections[secIdx + 1];
+    const endIdx = nextSec
+      ? paragraphs.findIndex((p) => p.id === nextSec.startParagraph)
+      : paragraphs.length;
+    for (
+      let i = startIdx;
+      i < (endIdx === -1 ? paragraphs.length : endIdx);
+      i++
+    ) {
+      const p = paragraphs[i];
+      if (p.sentences?.length > 0) {
+        const text = p.sentences[0].text;
+        return { text, page: p.page };
+      }
+    }
+    return null;
+  }, [selectedSection, chapterData]);
 
   // Passage matching as user types
   useEffect(() => {
@@ -409,9 +467,16 @@ export default function ReactionFlow({
                         </div>
                       </div>
 
+                      {/* Page range */}
+                      {sectionPageRanges[section.id] && (
+                        <div className={`rf-mono rf-section-pages${isCurrent ? ' indented' : ''}`}>
+                          Pages {sectionPageRanges[section.id].start}–{sectionPageRanges[section.id].end}
+                        </div>
+                      )}
+
                       {/* Status line */}
                       {!bothDone && (
-                        <div className="rf-section-status">
+                        <div className={`rf-section-status${isCurrent ? ' indented' : ''}`}>
                           {iDone && !otherDone && (
                             <>
                               <div className="rf-status-dot waiting" />
@@ -560,6 +625,20 @@ export default function ReactionFlow({
             <div className="rf-tags-section-name">
               {selectedSection?.title}
             </div>
+
+            {/* Pull quote from section */}
+            {sectionPullQuote && (
+              <div className="rf-pull-quote">
+                <div className="rf-pull-quote-text">
+                  &ldquo;{sectionPullQuote.text.length > 120
+                    ? sectionPullQuote.text.slice(0, 120) + '\u2026'
+                    : sectionPullQuote.text}&rdquo;
+                </div>
+                <div className="rf-mono rf-pull-quote-meta">
+                  Page {sectionPullQuote.page} &middot; From this section
+                </div>
+              </div>
+            )}
 
             {/* Reaction count */}
             {(() => {
