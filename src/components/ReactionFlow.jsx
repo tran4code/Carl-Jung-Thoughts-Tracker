@@ -37,6 +37,8 @@ export default function ReactionFlow({
   onShowConcept,
   showToast,
   revealed,
+  onBack,
+  onRead,
 }) {
   const [screen, setScreen] = useState('sections');
   const [selectedSection, setSelectedSection] = useState(null);
@@ -387,9 +389,19 @@ export default function ReactionFlow({
             Back
           </button>
         ) : (
-          <div className="rf-part-label">
+          <button className="rf-back-btn" onClick={onBack}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
             Part {['', 'I', 'II', 'III', 'IV', 'V'][chapterId] || chapterId}
-          </div>
+          </button>
         )}
 
         <div className="rf-header-title">
@@ -404,7 +416,24 @@ export default function ReactionFlow({
                 : 'React'}
         </div>
 
-        <div style={{ width: 44 }} />
+        {screen === 'sections' && onRead ? (
+          <button className="rf-read-btn" onClick={onRead}>
+            Read
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+          </button>
+        ) : (
+          <div style={{ width: 44 }} />
+        )}
       </div>
 
       {/* ══ CHAPTER HEADER ══ */}
@@ -459,7 +488,7 @@ export default function ReactionFlow({
                   >
                     <div className="rf-section-main">
                       <div className="rf-section-title-row">
-                        {isCurrent && <div className="rf-current-dot" />}
+                        <div className={`rf-current-dot${bothDone ? ' done' : isCurrent ? ' active' : iDone ? ' waiting' : ' unread'}`} />
                         <div
                           className={`rf-section-title${bothDone ? ' done' : isCurrent ? ' active' : iDone ? ' waiting' : ' future'}`}
                         >
@@ -469,14 +498,14 @@ export default function ReactionFlow({
 
                       {/* Page range */}
                       {sectionPageRanges[section.id] && (
-                        <div className={`rf-mono rf-section-pages${isCurrent ? ' indented' : ''}`}>
+                        <div className="rf-mono rf-section-pages indented">
                           Pages {sectionPageRanges[section.id].start}–{sectionPageRanges[section.id].end}
                         </div>
                       )}
 
                       {/* Status line */}
                       {!bothDone && (
-                        <div className={`rf-section-status${isCurrent ? ' indented' : ''}`}>
+                        <div className="rf-section-status indented">
                           {iDone && !otherDone && (
                             <>
                               <div className="rf-status-dot waiting" />
