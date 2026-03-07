@@ -4769,6 +4769,13 @@ textarea {
 .rf-badge.locked svg {
   stroke: var(--text-dim);
 }
+.rf-badge.my-reactions {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.rf-badge.my-reactions svg {
+  stroke: var(--text-dim);
+}
 
 /* Section finish */
 .rf-section-finish-area {
@@ -5209,6 +5216,24 @@ textarea {
 
 .rf-voice-area {
   padding: 0.75rem 0;
+}
+
+.rf-manual-search-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+}
+.rf-manual-search-link:hover {
+  opacity: 0.8;
 }
 
 /* ── Success screen ── */

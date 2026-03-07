@@ -221,6 +221,14 @@ export default function ReactionFlow({
     } else if (iDone) {
       setPartialReveal(true);
       setRevealSection(section);
+    } else {
+      // Not finished yet — show own reactions if any exist
+      const sectionReactions = reactionsBySection[section.id];
+      const myCount = sectionReactions?.myCount || 0;
+      if (myCount > 0) {
+        setPartialReveal(true);
+        setRevealSection(section);
+      }
     }
   };
 
@@ -484,7 +492,7 @@ export default function ReactionFlow({
                 >
                   <div
                     onClick={() => handleSectionTap(section)}
-                    className={`rf-section-info${bothDone || iDone ? ' tappable' : ''}`}
+                    className={`rf-section-info${bothDone || iDone || myCount > 0 ? ' tappable' : ''}`}
                   >
                     <div className="rf-section-main">
                       <div className="rf-section-title-row">
@@ -558,6 +566,21 @@ export default function ReactionFlow({
                         >
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </div>
+                    )}
+                    {!iDone && myCount > 0 && (
+                      <div className="rf-badge my-reactions">
+                        <span>{myCount}</span>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                         </svg>
                       </div>
                     )}
@@ -896,6 +919,29 @@ export default function ReactionFlow({
                   onComplete={handleVoiceComplete}
                   showToast={showToast}
                 />
+                {rawTranscription && (
+                  <>
+                    <textarea
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder="Edit transcription..."
+                      className="rf-textarea"
+                      style={{ marginTop: '0.5rem' }}
+                    />
+                    {!selectedPassage && !showManualSearch && (
+                      <button
+                        className="rf-manual-search-link"
+                        onClick={() => setShowManualSearch(true)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        Search for a passage
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
@@ -920,7 +966,7 @@ export default function ReactionFlow({
               </div>
             )}
 
-            {rawTranscription && (
+            {rawTranscription && inputMode === 'type' && (
               <div className="rf-mono" style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
                 Transcription loaded — edit above if needed
               </div>
