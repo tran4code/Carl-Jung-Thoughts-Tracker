@@ -919,6 +919,29 @@ export default function ReactionFlow({
                   onComplete={handleVoiceComplete}
                   showToast={showToast}
                 />
+                {rawTranscription && (
+                  <>
+                    <textarea
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder="Edit transcription..."
+                      className="rf-textarea"
+                      style={{ marginTop: '0.5rem' }}
+                    />
+                    {!selectedPassage && !showManualSearch && (
+                      <button
+                        className="rf-manual-search-link"
+                        onClick={() => setShowManualSearch(true)}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                        Search for a passage
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
@@ -943,7 +966,7 @@ export default function ReactionFlow({
               </div>
             )}
 
-            {rawTranscription && (
+            {rawTranscription && inputMode === 'type' && (
               <div className="rf-mono" style={{ fontSize: '0.65rem', color: 'var(--text-dim)', marginTop: '0.25rem' }}>
                 Transcription loaded — edit above if needed
               </div>

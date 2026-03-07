@@ -5218,6 +5218,24 @@ textarea {
   padding: 0.75rem 0;
 }
 
+.rf-manual-search-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+}
+.rf-manual-search-link:hover {
+  opacity: 0.8;
+}
+
 /* ── Success screen ── */
 .rf-success {
   display: flex;
