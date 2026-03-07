@@ -4769,6 +4769,13 @@ textarea {
 .rf-badge.locked svg {
   stroke: var(--text-dim);
 }
+.rf-badge.my-reactions {
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+.rf-badge.my-reactions svg {
+  stroke: var(--text-dim);
+}
 
 /* Section finish */
 .rf-section-finish-area {
