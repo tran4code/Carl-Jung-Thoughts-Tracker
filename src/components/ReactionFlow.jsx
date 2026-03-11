@@ -66,9 +66,28 @@ export default function ReactionFlow({
 
   const otherName = reader === 'Keith' ? 'Danielle' : 'Keith';
 
+  // Build section-scoped chapter data for passage search
+  const sectionChapterData = useMemo(() => {
+    if (!chapterData?.paragraphs || !chapterData?.sections || !selectedSection) return chapterData;
+    const { paragraphs, sections: chapSections } = chapterData;
+    const secIdx = chapSections.findIndex((s) => s.id === selectedSection.id);
+    if (secIdx === -1) return chapterData;
+    const sec = chapSections[secIdx];
+    const startIdx = paragraphs.findIndex((p) => p.id === sec.startParagraph);
+    if (startIdx === -1) return chapterData;
+    const nextSec = chapSections[secIdx + 1];
+    const endIdx = nextSec
+      ? paragraphs.findIndex((p) => p.id === nextSec.startParagraph)
+      : paragraphs.length;
+    return {
+      ...chapterData,
+      paragraphs: paragraphs.slice(startIdx, endIdx === -1 ? undefined : endIdx),
+    };
+  }, [chapterData, selectedSection]);
+
   const corpusIndex = useMemo(
-    () => (chapterData ? buildCorpusIndex(chapterData) : null),
-    [chapterData]
+    () => (sectionChapterData ? buildCorpusIndex(sectionChapterData) : null),
+    [sectionChapterData]
   );
 
   // Level-2 sections only for the flow
@@ -139,10 +158,10 @@ export default function ReactionFlow({
       }
 
       const mine = myReactions.filter(
-        (r) => r.passageStart && sentIds.has(r.passageStart)
+        (r) => r.passageStart ? sentIds.has(r.passageStart) : r.section === sec.id
       );
       const others = otherReactions.filter(
-        (r) => r.passageStart && sentIds.has(r.passageStart)
+        (r) => r.passageStart ? sentIds.has(r.passageStart) : r.section === sec.id
       );
 
       map[sec.id] = {
@@ -153,6 +172,27 @@ export default function ReactionFlow({
         total: mine.length + others.length,
       };
     }
+
+    // Orphan reactions (no passageStart, no section) → assign to first section
+    const firstSecId = (chapterData.sections || [])[0]?.id;
+    if (firstSecId && map[firstSecId]) {
+      const claimed = new Set();
+      for (const secId in map) {
+        for (const r of [...map[secId].mine, ...map[secId].others]) claimed.add(r.id);
+      }
+      const orphanMine = myReactions.filter((r) => !claimed.has(r.id));
+      const orphanOthers = otherReactions.filter((r) => !claimed.has(r.id));
+      if (orphanMine.length || orphanOthers.length) {
+        map[firstSecId] = {
+          mine: [...map[firstSecId].mine, ...orphanMine],
+          others: [...map[firstSecId].others, ...orphanOthers],
+          myCount: map[firstSecId].myCount + orphanMine.length,
+          otherCount: map[firstSecId].otherCount + orphanOthers.length,
+          total: map[firstSecId].total + orphanMine.length + orphanOthers.length,
+        };
+      }
+    }
+
     return map;
   }, [chapterData, allReactions, myReactions, otherReactions]);
 
@@ -314,6 +354,7 @@ export default function ReactionFlow({
         tags,
         isBlindReaction: false,
         page: null,
+        section: selectedSection?.id || null,
       });
 
       setSubmitted(true);
@@ -844,7 +885,7 @@ export default function ReactionFlow({
 
             {showManualSearch && !selectedPassage && chapterData && (
               <PassageMatcher
-                chapterData={chapterData}
+                chapterData={sectionChapterData}
                 reactionText={inputText}
                 onSelect={(p) => {
                   setSelectedPassage(p);
