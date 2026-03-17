@@ -2,7 +2,7 @@ import { useState } from 'react';
 import VoiceRecorder from './VoiceRecorder';
 import AudioPlayer from './AudioPlayer';
 
-export default function ReplySection({ replies = [], reactionId, reader, onAddReply, onDeleteReply, chapterId }) {
+export default function ReplySection({ replies = [], reactionId, reader, onAddReply, onDeleteReply, chapterId, insideBubble = false, showCountLabel = null }) {
   const [showInput, setShowInput] = useState(false);
   const [text, setText] = useState('');
   const [audioClips, setAudioClips] = useState([]);
@@ -46,41 +46,50 @@ export default function ReplySection({ replies = [], reactionId, reader, onAddRe
     <div className="reply-section">
       {sortedReplies.map((reply) => (
         <div key={reply.id} className={`reply-item ${reply.reader.toLowerCase()}`}>
-          <div className="reply-header">
-            <span className={`reply-reader ${reply.reader.toLowerCase()}`}>
-              {reply.reader}
-            </span>
-            {onDeleteReply && reply.reader === reader && (
-              confirmDeleteId === reply.id ? (
-                <span className="reply-confirm-delete">
-                  <button
-                    className="reply-confirm-yes"
-                    onClick={() => { onDeleteReply(reactionId, reply.id); setConfirmDeleteId(null); }}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="reply-confirm-no"
-                    onClick={() => setConfirmDeleteId(null)}
-                  >
-                    Cancel
-                  </button>
+          {insideBubble && (
+            <div className={`card-avatar ${reply.reader.toLowerCase()}`} style={{ width: 18, height: 18, fontSize: '0.45rem' }}>
+              {reply.reader.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="reply-item-content">
+            {!insideBubble && (
+              <div className="reply-header">
+                <span className={`reply-reader ${reply.reader.toLowerCase()}`}>
+                  {reply.reader}
                 </span>
-              ) : (
-                <button
-                  className="reply-delete-btn"
-                  onClick={() => setConfirmDeleteId(reply.id)}
-                  title="Delete reply"
-                >
-                  &times;
-                </button>
-              )
+                {onDeleteReply && reply.reader === reader && (
+                  confirmDeleteId === reply.id ? (
+                    <span className="reply-confirm-delete">
+                      <button
+                        className="reply-confirm-yes"
+                        onClick={() => { onDeleteReply(reactionId, reply.id); setConfirmDeleteId(null); }}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="reply-confirm-no"
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      className="reply-delete-btn"
+                      onClick={() => setConfirmDeleteId(reply.id)}
+                      title="Delete reply"
+                    >
+                      &times;
+                    </button>
+                  )
+                )}
+              </div>
             )}
+            <span className="reply-text">{reply.text}</span>
+            {reply.audioClips && reply.audioClips.map((clip, i) => (
+              <AudioPlayer key={i} audioBase64={clip.audioBase64} audioMimeType={clip.audioMimeType} />
+            ))}
           </div>
-          <span className="reply-text">{reply.text}</span>
-          {reply.audioClips && reply.audioClips.map((clip, i) => (
-            <AudioPlayer key={i} audioBase64={clip.audioBase64} audioMimeType={clip.audioMimeType} />
-          ))}
         </div>
       ))}
 
@@ -130,7 +139,10 @@ export default function ReplySection({ replies = [], reactionId, reader, onAddRe
           className="reply-toggle-btn"
           onClick={() => setShowInput(true)}
         >
-          Reply
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {showCountLabel || 'Reply'}
         </button>
       )}
     </div>

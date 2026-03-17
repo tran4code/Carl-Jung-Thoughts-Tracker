@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 
 export default function PassageHighlight({
   chapterData, passageStart, passageEnd, reactionId, onUpdate,
+  readOnly = false, compact = false, pageOnly = false,
 }) {
   const [start, setStart] = useState(passageStart);
   const [end, setEnd] = useState(passageEnd || passageStart);
@@ -32,6 +33,26 @@ export default function PassageHighlight({
   const canExpandDown = endIdx < allSentences.length - 1;
   const peekAbove = canExpandUp ? allSentences[startIdx - 1] : null;
   const peekBelow = canExpandDown ? allSentences[endIdx + 1] : null;
+
+  // pageOnly mode: just render the page reference inline
+  if (pageOnly) {
+    return (
+      <span className="rc-passage-page">
+        {startPage === endPage ? `p. ${startPage}` : `pp. ${startPage}\u2013${endPage}`}
+      </span>
+    );
+  }
+
+  // compact mode: just the quoted text, no container/controls/page
+  if (compact) {
+    return (
+      <>
+        &ldquo;{passage.map((s) => (
+          <span key={s.id}>{s.text} </span>
+        ))}&rdquo;
+      </>
+    );
+  }
 
   const expandUp = () => {
     if (!canExpandUp) return;
@@ -73,22 +94,24 @@ export default function PassageHighlight({
     <div className="passage-container">
       <div className="passage-body">
         <div className="passage-content">
-          {/* Top controls — expand/trim above */}
-          <div className="passage-edge-controls top">
-            {canExpandUp && (
-              <button className="passage-edge-btn" onClick={expandUp}>
-                <span className="passage-edge-icon">&uarr;</span> Show more above
-              </button>
-            )}
-            {canTrim && (
-              <button className="passage-edge-btn trim" onClick={trimTop}>
-                <span className="passage-edge-icon">&darr;</span> Show less
-              </button>
-            )}
-          </div>
+          {/* Top controls — expand/trim above (edit mode only) */}
+          {!readOnly && (
+            <div className="passage-edge-controls top">
+              {canExpandUp && (
+                <button className="passage-edge-btn" onClick={expandUp}>
+                  <span className="passage-edge-icon">&uarr;</span> Show more above
+                </button>
+              )}
+              {canTrim && (
+                <button className="passage-edge-btn trim" onClick={trimTop}>
+                  <span className="passage-edge-icon">&darr;</span> Show less
+                </button>
+              )}
+            </div>
+          )}
 
-          {/* Peek above — tappable preview */}
-          {peekAbove && (
+          {/* Peek above — tappable preview (edit mode only) */}
+          {!readOnly && peekAbove && (
             <div className="passage-peek above" onClick={expandUp}>
               {peekAbove.text}
             </div>
@@ -101,31 +124,33 @@ export default function PassageHighlight({
             ))}
           </div>
 
-          {/* Peek below — tappable preview */}
-          {peekBelow && (
+          {/* Peek below — tappable preview (edit mode only) */}
+          {!readOnly && peekBelow && (
             <div className="passage-peek below" onClick={expandDown}>
               {peekBelow.text}
             </div>
           )}
 
-          {/* Bottom controls — expand/trim below */}
-          <div className="passage-edge-controls bottom">
-            {canTrim && (
-              <button className="passage-edge-btn trim" onClick={trimBottom}>
-                <span className="passage-edge-icon">&uarr;</span> Show less
-              </button>
-            )}
-            {canExpandDown && (
-              <button className="passage-edge-btn" onClick={expandDown}>
-                <span className="passage-edge-icon">&darr;</span> Show more below
-              </button>
-            )}
-          </div>
+          {/* Bottom controls — expand/trim below (edit mode only) */}
+          {!readOnly && (
+            <div className="passage-edge-controls bottom">
+              {canTrim && (
+                <button className="passage-edge-btn trim" onClick={trimBottom}>
+                  <span className="passage-edge-icon">&uarr;</span> Show less
+                </button>
+              )}
+              {canExpandDown && (
+                <button className="passage-edge-btn" onClick={expandDown}>
+                  <span className="passage-edge-icon">&darr;</span> Show more below
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="passage-page">
-        {startPage === endPage ? `p. ${startPage}` : `pp. ${startPage}–${endPage}`}
+        {startPage === endPage ? `p. ${startPage}` : `pp. ${startPage}\u2013${endPage}`}
       </div>
     </div>
   );

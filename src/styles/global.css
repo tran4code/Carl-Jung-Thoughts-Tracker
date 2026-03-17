@@ -991,65 +991,284 @@ textarea {
   font-size: 0.8rem;
 }
 
-/* Reaction cards */
+/* Reaction cards — chat-bubble layout */
 .reaction-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 3px;
   padding: 0;
-  margin-bottom: 1rem;
-  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+
+.rc-bubble-align {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+}
+
+.rc-bubble-align.keith {
+  align-items: flex-end;
+}
+
+.rc-bubble-align.danielle {
+  align-items: flex-start;
+}
+
+.rc-bubble {
+  max-width: 88%;
+  min-width: 65%;
+  padding: 14px 16px;
+  border-radius: 18px;
   transition: border-color 0.3s;
 }
 
-.reaction-card:hover {
-  border-color: var(--border-mid);
+.rc-bubble.keith {
+  border-top-right-radius: 6px;
+  background: rgba(212, 168, 67, 0.04);
+  border: 1px solid rgba(212, 168, 67, 0.12);
 }
 
-.reaction-card.keith,
-.reaction-card.danielle {
-  border-left: none;
+.rc-bubble.danielle {
+  border-top-left-radius: 6px;
+  background: rgba(122, 154, 181, 0.04);
+  border: 1px solid rgba(122, 154, 181, 0.12);
 }
 
-/* Card top bar — avatar + name + tag + date + menu */
-.reaction-card-header {
+/* Header — avatar + tag pill + date + menu */
+.rc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.4rem 0;
+  margin-bottom: 10px;
 }
 
-.card-identity {
+.rc-identity {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 8px;
 }
 
 .card-avatar {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-note);
+  font-family: var(--font-body);
   font-size: 0.55rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   flex-shrink: 0;
 }
 
 .card-avatar.keith {
-  background: var(--accent-gold-soft);
-  color: var(--accent-gold);
-  border: 1px solid var(--accent-gold-border);
+  background: linear-gradient(135deg, #3A3530, #524D44);
+  color: var(--text-secondary);
 }
 
 .card-avatar.danielle {
-  background: var(--accent-rose-soft);
+  background: linear-gradient(135deg, #2A3540, #3D4A55);
+  color: var(--text-secondary);
+}
+
+.rc-tag-pill {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--font-body);
+}
+
+.rc-tag-pill.keith {
+  color: var(--accent-gold);
+  background: rgba(212, 168, 67, 0.1);
+}
+
+.rc-tag-pill.danielle {
   color: var(--accent-rose);
-  border: 1px solid rgba(160, 86, 107, 0.25);
+  background: rgba(122, 154, 181, 0.1);
+}
+
+.rc-tag-pill .tag-emoji {
+  font-size: 0.72rem;
+}
+
+.rc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rc-date {
+  font-family: var(--font-note);
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Reflection text — prominent, shown first */
+.rc-reflection {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.rc-no-reflection {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+/* Passage quote — compact, collapsible */
+.rc-passage-box {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(212, 207, 196, 0.03);
+  border: 1px solid rgba(212, 207, 196, 0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rc-passage-box.keith {
+  border-left: 2px solid rgba(212, 168, 67, 0.3);
+}
+
+.rc-passage-box.danielle {
+  border-left: 2px solid rgba(122, 154, 181, 0.3);
+}
+
+.rc-passage-text {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rc-passage-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.rc-passage-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.rc-passage-page {
+  font-family: var(--font-note);
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rc-passage-toggle {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+/* Audio inside bubble */
+.rc-audio {
+  padding: 0.4rem 0 0;
+}
+
+/* Transcription inside bubble */
+.rc-transcription {
+  padding: 0.25rem 0;
+}
+
+.rc-transcription summary {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.rc-transcription p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+  line-height: 1.6;
+}
+
+/* Reply CTA — outside the bubble */
+.rc-reply-cta {
+  padding: 4px 16px 0;
+}
+
+.rc-reply-cta.keith {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rc-reply-cta.danielle {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.rc-reply-cta .reply-section {
+  border-top: none;
+  padding: 0;
+  margin-top: 0;
+}
+
+.rc-reply-cta .reply-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  padding: 4px 0;
+}
+
+/* Link passage button (Keith linking quotes to Danielle's reactions) */
+.rc-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px dashed rgba(122, 154, 181, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 6px;
+}
+
+.rc-link-btn:hover {
+  border-color: rgba(122, 154, 181, 0.4);
+  color: var(--text-secondary);
+}
+
+.rc-link-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+/* Legacy classes kept for edit mode compatibility */
+.card-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .card-user-name {
@@ -1088,7 +1307,6 @@ textarea {
   color: var(--text-dim);
 }
 
-/* Legacy class still used in some places */
 .reaction-reader {
   display: none;
 }
@@ -1105,7 +1323,6 @@ textarea {
   display: none;
 }
 
-/* Card footer */
 .card-footer {
   display: flex;
   align-items: center;
@@ -3121,12 +3338,43 @@ textarea {
   opacity: 0.7;
 }
 
-/* Reaction card header with menu */
+/* Reaction card header with menu (legacy, kept for edit mode) */
 .reaction-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: relative;
+}
+
+/* Replies inside bubble — compact style */
+.rc-bubble > .reply-section {
+  margin-top: 10px;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(212, 207, 196, 0.06);
+}
+
+.rc-bubble > .reply-section .reply-item {
+  background: none;
+  border-left: none;
+  padding: 0;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.rc-bubble > .reply-section .reply-reader {
+  display: none;
+}
+
+.rc-bubble > .reply-section .reply-text {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.rc-bubble > .reply-section .reply-toggle-btn {
+  display: none;
 }
 
 .reaction-menu {
