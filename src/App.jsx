@@ -490,7 +490,7 @@ function App() {
       {reader && (
         <div className="app-below-cover" ref={chaptersRef}>
           <div className="app-content">
-            <ChapterList onSelect={changeChapter} skipEntry={transition === 'entering'} />
+            <ChapterList onSelect={changeChapter} skipEntry={transition === 'entering'} reader={reader} />
           </div>
         </div>
       )}

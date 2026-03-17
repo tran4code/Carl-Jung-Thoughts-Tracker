@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import chaptersMeta from '../data/chapters-meta.json';
 import MiniConstellation from './MiniConstellation';
+import { READER_COLORS } from '../config';
 
 // Module-level cache so data survives unmount/remount (e.g. page transitions)
 let _cachedStatus = {};
@@ -37,13 +38,83 @@ const CHAPTER_SYMBOLS = {
   </svg>`,
 };
 
-export default function ChapterList({ onSelect, skipEntry }) {
+export default function ChapterList({ onSelect, skipEntry, reader }) {
   const [chapterStatus, setChapterStatus] = useState(_cachedStatus);
   const [chapterReactions, setChapterReactions] = useState(_cachedReactions);
   const [revealed, setRevealed] = useState(skipEntry);
+  const [unreadSections, setUnreadSections] = useState([]);
+  const [newReactionCount, setNewReactionCount] = useState(0);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   // Capture whether we mounted during a return transition — never replay entry animations
   const mountedDuringReturn = useRef(skipEntry);
   const rowRefs = useRef([]);
+
+  const otherReader = reader === 'Keith' ? 'Danielle' : 'Keith';
+
+  // Listen for sections the other reader finished but current reader hasn't
+  useEffect(() => {
+    if (!reader) return;
+    const q = query(collection(db, 'sectionProgress'), where('finished', '==', true));
+    const unsub = onSnapshot(q, (snap) => {
+      // Build map: sectionId -> { keith: bool, danielle: bool }
+      const progress = {};
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (!data.sectionId) return;
+        const key = `${data.chapterId}-${data.sectionId}`;
+        if (!progress[key]) progress[key] = { keith: false, danielle: false, chapterId: data.chapterId, sectionId: data.sectionId };
+        if (data.reader === 'Keith') progress[key].keith = true;
+        if (data.reader === 'Danielle') progress[key].danielle = true;
+      });
+
+      // Find sections where other reader finished but current reader hasn't
+      const readerKey = reader.toLowerCase();
+      const otherKey = otherReader.toLowerCase();
+      const newUnread = Object.values(progress).filter(
+        (p) => p[otherKey] && !p[readerKey]
+      );
+
+      // Check which ones the user has already dismissed
+      const seenRaw = localStorage.getItem(`jung-seen-sections-${reader}`);
+      const seenSet = new Set(seenRaw ? JSON.parse(seenRaw) : []);
+      const trulyNew = newUnread.filter((p) => !seenSet.has(`${p.chapterId}-${p.sectionId}`));
+
+      setUnreadSections(trulyNew);
+      if (trulyNew.length > 0) setBannerDismissed(false);
+    });
+    return unsub;
+  }, [reader, otherReader]);
+
+  // Listen for new reactions from the other reader
+  const otherReactionIdsRef = useRef([]);
+  useEffect(() => {
+    if (!reader) return;
+    const q = query(collection(db, 'reactions'), where('reader', '==', otherReader));
+    const unsub = onSnapshot(q, (snap) => {
+      const reactionIds = snap.docs.map((d) => d.id);
+      otherReactionIdsRef.current = reactionIds;
+      const seenRaw = localStorage.getItem(`jung-seen-reactions-${reader}`);
+      const seenSet = new Set(seenRaw ? JSON.parse(seenRaw) : []);
+      const unseen = reactionIds.filter((id) => !seenSet.has(id));
+      setNewReactionCount(unseen.length);
+      if (unseen.length > 0) setBannerDismissed(false);
+    });
+    return unsub;
+  }, [reader, otherReader]);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    // Mark sections as seen
+    const seenSectionsRaw = localStorage.getItem(`jung-seen-sections-${reader}`);
+    const seenSections = new Set(seenSectionsRaw ? JSON.parse(seenSectionsRaw) : []);
+    unreadSections.forEach((p) => seenSections.add(`${p.chapterId}-${p.sectionId}`));
+    localStorage.setItem(`jung-seen-sections-${reader}`, JSON.stringify([...seenSections]));
+    // Mark reactions as seen
+    const seenReactionsRaw = localStorage.getItem(`jung-seen-reactions-${reader}`);
+    const seenReactions = new Set(seenReactionsRaw ? JSON.parse(seenReactionsRaw) : []);
+    otherReactionIdsRef.current.forEach((id) => seenReactions.add(id));
+    localStorage.setItem(`jung-seen-reactions-${reader}`, JSON.stringify([...seenReactions]));
+  };
 
   useEffect(() => {
     if (mountedDuringReturn.current) {
@@ -147,8 +218,36 @@ export default function ChapterList({ onSelect, skipEntry }) {
     return Math.min(reactions.length * 0.05, 0.95);
   };
 
+  const showBanner = (unreadSections.length > 0 || newReactionCount > 0) && !bannerDismissed;
+
   return (
     <div className={`chapter-list-v2${revealed ? ' revealed' : ''}${mountedDuringReturn.current ? ' skip-entry' : ''}`}>
+      {/* Unread sections banner */}
+      {showBanner && (
+        <div className="unread-banner" style={{ '--reader-color': READER_COLORS[otherReader] }}>
+          <div className="unread-banner-content">
+            <span className="unread-banner-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </span>
+            <span className="unread-banner-text">
+              {unreadSections.length > 0 && newReactionCount > 0
+                ? `${otherReader} finished ${unreadSections.length === 1 ? 'a section' : `${unreadSections.length} sections`} and left ${newReactionCount} new ${newReactionCount === 1 ? 'reaction' : 'reactions'} — keep reading to unlock them!`
+                : unreadSections.length > 0
+                  ? `${otherReader} finished ${unreadSections.length === 1 ? 'a section' : `${unreadSections.length} sections`} — reactions are waiting for you!`
+                  : `${otherReader} left ${newReactionCount} new ${newReactionCount === 1 ? 'reaction' : 'reactions'} — keep reading to unlock them!`
+              }
+            </span>
+          </div>
+          <button className="unread-banner-dismiss" onClick={dismissBanner} aria-label="Dismiss">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
       {/* SVG filter for underwater distortion on dormant cards */}
       <svg width="0" height="0" style={{ position: 'absolute' }}>
         <defs>
