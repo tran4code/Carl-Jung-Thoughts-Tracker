@@ -82,7 +82,7 @@ export default function SectionReveal({
               reaction={r}
               chapterData={chapterData}
               onShowConcept={onShowConcept}
-              onUpdate={r.reader === reader ? onUpdateReaction : undefined}
+              onUpdate={onUpdateReaction}
               reader={reader}
               onAddReply={onAddReply}
               onDeleteReaction={r.reader === reader ? onDeleteReaction : undefined}
