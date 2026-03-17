@@ -7,6 +7,7 @@ export default function ReplySection({ replies = [], reactionId, reader, onAddRe
   const [text, setText] = useState('');
   const [audioClips, setAudioClips] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const handleVoiceComplete = (result) => {
     if (!result) return;
@@ -49,14 +50,31 @@ export default function ReplySection({ replies = [], reactionId, reader, onAddRe
             <span className={`reply-reader ${reply.reader.toLowerCase()}`}>
               {reply.reader}
             </span>
-            {onDeleteReply && (
-              <button
-                className="reply-delete-btn"
-                onClick={() => onDeleteReply(reactionId, reply.id)}
-                title="Delete reply"
-              >
-                &times;
-              </button>
+            {onDeleteReply && reply.reader === reader && (
+              confirmDeleteId === reply.id ? (
+                <span className="reply-confirm-delete">
+                  <button
+                    className="reply-confirm-yes"
+                    onClick={() => { onDeleteReply(reactionId, reply.id); setConfirmDeleteId(null); }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="reply-confirm-no"
+                    onClick={() => setConfirmDeleteId(null)}
+                  >
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  className="reply-delete-btn"
+                  onClick={() => setConfirmDeleteId(reply.id)}
+                  title="Delete reply"
+                >
+                  &times;
+                </button>
+              )
             )}
           </div>
           <span className="reply-text">{reply.text}</span>

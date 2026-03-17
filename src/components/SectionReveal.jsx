@@ -6,7 +6,7 @@ export default function SectionReveal({
   reader, chapterId, sectionId, sectionTitle,
   myReactions, otherReactions,
   sectionProgress, markSectionFinished,
-  chapterData, onShowConcept, onAddReply, onDeleteReaction, onDeleteReply,
+  chapterData, onShowConcept, onAddReply, onUpdateReaction, onDeleteReaction, onDeleteReply,
 }) {
   const [confirming, setConfirming] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -82,9 +82,10 @@ export default function SectionReveal({
               reaction={r}
               chapterData={chapterData}
               onShowConcept={onShowConcept}
+              onUpdate={r.reader === reader ? onUpdateReaction : undefined}
               reader={reader}
               onAddReply={onAddReply}
-              onDeleteReaction={onDeleteReaction}
+              onDeleteReaction={r.reader === reader ? onDeleteReaction : undefined}
               onDeleteReply={onDeleteReply}
             />
           ))}

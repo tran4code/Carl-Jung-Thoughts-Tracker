@@ -9,7 +9,7 @@ export default function ChapterReveal({
   reader, chapterId, myReactions, otherReactions,
   bothFinished, keithFinished, danielleFinished,
   onMarkFinished, onReveal, revealed,
-  chapterData, onShowConcept, onAddReply, onDeleteReaction, onDeleteReply,
+  chapterData, onShowConcept, onAddReply, onUpdateReaction, onDeleteReaction, onDeleteReply,
 }) {
   const [confirming, setConfirming] = useState(false);
   const iFinished = reader === 'Keith' ? keithFinished : danielleFinished;
@@ -46,9 +46,10 @@ export default function ChapterReveal({
                 reaction={r}
                 chapterData={chapterData}
                 onShowConcept={onShowConcept}
+                onUpdate={r.reader === reader ? onUpdateReaction : undefined}
                 reader={reader}
                 onAddReply={onAddReply}
-                onDeleteReaction={onDeleteReaction}
+                onDeleteReaction={r.reader === reader ? onDeleteReaction : undefined}
                 onDeleteReply={onDeleteReply}
               />
             </div>

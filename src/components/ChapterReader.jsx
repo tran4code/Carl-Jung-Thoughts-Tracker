@@ -335,6 +335,7 @@ export default function ChapterReader({
                   chapterData={chapterData}
                   onShowConcept={onShowConcept}
                   onAddReply={addReply}
+                  onUpdateReaction={updateReaction}
                   onDeleteReaction={deleteReaction}
                   onDeleteReply={deleteReply}
                 />
@@ -388,6 +389,7 @@ export default function ChapterReader({
             chapterData={chapterData}
             onShowConcept={onShowConcept}
             onAddReply={addReply}
+            onUpdateReaction={updateReaction}
             onDeleteReaction={deleteReaction}
             onDeleteReply={deleteReply}
           />

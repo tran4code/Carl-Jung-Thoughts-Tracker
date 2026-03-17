@@ -44,6 +44,7 @@ export default function ReactionFlow({
   const [selectedSection, setSelectedSection] = useState(null);
   const [selectedTag, setSelectedTag] = useState(null);
   const [inputText, setInputText] = useState('');
+  const [quoteSearchText, setQuoteSearchText] = useState('');
   const [selectedPassage, setSelectedPassage] = useState(null);
   const [inputMode, setInputMode] = useState('type');
   const [isRecording, setIsRecording] = useState(false);
@@ -66,7 +67,7 @@ export default function ReactionFlow({
 
   const otherName = reader === 'Keith' ? 'Danielle' : 'Keith';
 
-  // Build section-scoped chapter data for passage search
+  // Build section-scoped chapter data (current section only — used for manual browse)
   const sectionChapterData = useMemo(() => {
     if (!chapterData?.paragraphs || !chapterData?.sections || !selectedSection) return chapterData;
     const { paragraphs, sections: chapSections } = chapterData;
@@ -85,9 +86,25 @@ export default function ReactionFlow({
     };
   }, [chapterData, selectedSection]);
 
+  // Build search data: current section + all prior sections (everything up to end of current)
+  const searchableChapterData = useMemo(() => {
+    if (!chapterData?.paragraphs || !chapterData?.sections || !selectedSection) return chapterData;
+    const { paragraphs, sections: chapSections } = chapterData;
+    const secIdx = chapSections.findIndex((s) => s.id === selectedSection.id);
+    if (secIdx === -1) return chapterData;
+    const nextSec = chapSections[secIdx + 1];
+    const endIdx = nextSec
+      ? paragraphs.findIndex((p) => p.id === nextSec.startParagraph)
+      : paragraphs.length;
+    return {
+      ...chapterData,
+      paragraphs: paragraphs.slice(0, endIdx === -1 ? undefined : endIdx),
+    };
+  }, [chapterData, selectedSection]);
+
   const corpusIndex = useMemo(
-    () => (sectionChapterData ? buildCorpusIndex(sectionChapterData) : null),
-    [sectionChapterData]
+    () => (searchableChapterData ? buildCorpusIndex(searchableChapterData) : null),
+    [searchableChapterData]
   );
 
   // Level-2 sections only for the flow
@@ -132,6 +149,30 @@ export default function ReactionFlow({
     }
     return ranges;
   }, [chapterData]);
+
+  // Map a sentence ID to the section it belongs to
+  const getSectionForSentence = useCallback((sentenceId) => {
+    if (!chapterData?.paragraphs || !chapterData?.sections) return null;
+    const { paragraphs, sections: chapSections } = chapterData;
+    // Find which paragraph contains the sentence
+    let paraIdx = -1;
+    for (let i = 0; i < paragraphs.length; i++) {
+      if (paragraphs[i].sentences?.some((s) => s.id === sentenceId)) {
+        paraIdx = i;
+        break;
+      }
+    }
+    if (paraIdx === -1) return null;
+    // Find which section contains that paragraph
+    for (let i = chapSections.length - 1; i >= 0; i--) {
+      const secStartIdx = paragraphs.findIndex((p) => p.id === chapSections[i].startParagraph);
+      if (secStartIdx !== -1 && paraIdx >= secStartIdx) {
+        // Match to flowSections (level-2 only)
+        return flowSections.find((fs) => fs.id === chapSections[i].id) || null;
+      }
+    }
+    return null;
+  }, [chapterData, flowSections]);
 
   // Count reactions per section
   const reactionsBySection = useMemo(() => {
@@ -226,24 +267,25 @@ export default function ReactionFlow({
     return null;
   }, [selectedSection, chapterData]);
 
-  // Passage matching as user types
+  // Passage matching as user types in quote search box
+  // Searches current section + all prior sections, ranked purely by similarity
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (!inputText.trim() || inputText.trim().length < 15 || !corpusIndex) {
+    if (!quoteSearchText.trim() || quoteSearchText.trim().length < 8 || !corpusIndex) {
       setSuggestedMatches([]);
       return;
     }
 
     debounceRef.current = setTimeout(() => {
-      const matches = findTopMatches(inputText, corpusIndex, 3);
+      const matches = findTopMatches(quoteSearchText, corpusIndex, 3);
       setSuggestedMatches(matches);
     }, 400);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [inputText, corpusIndex]);
+  }, [quoteSearchText, corpusIndex]);
 
   // Clean up recording interval on unmount
   useEffect(() => () => clearInterval(intervalRef.current), []);
@@ -287,6 +329,7 @@ export default function ReactionFlow({
     if (screen === 'compose') {
       setScreen('tags');
       setInputText('');
+      setQuoteSearchText('');
       setSelectedPassage(null);
       setSelectedTag(null);
       setTags([]);
@@ -333,7 +376,12 @@ export default function ReactionFlow({
     }
     setSelectedPassage({ start: match.id, end: match.id });
     setShowManualSearch(false);
-  }, []);
+    // Auto-detect which section this passage belongs to
+    const matchedSection = getSectionForSentence(match.id);
+    if (matchedSection) {
+      setSelectedSection(matchedSection);
+    }
+  }, [getSectionForSentence]);
 
   const canSubmit = inputText.trim() || tags.length > 0 || selectedPassage;
 
@@ -362,6 +410,7 @@ export default function ReactionFlow({
         setSubmitted(false);
         setScreen('sections');
         setInputText('');
+        setQuoteSearchText('');
         setSelectedPassage(null);
         setSelectedTag(null);
         setTags([]);
@@ -415,7 +464,7 @@ export default function ReactionFlow({
 
   // Show passage suggestions or selected preview
   const showSuggestionsPanel =
-    !selectedPassage && !showManualSearch && chapterData;
+    !selectedPassage && !showManualSearch && chapterData && quoteSearchText.trim().length > 0;
   const showSelectedPreview = selectedPassage && !showManualSearch;
 
   // ── Render ──
@@ -748,77 +797,28 @@ export default function ReactionFlow({
             })()}
           </div>
 
-          {/* Horizontal scroll tags */}
           <div className="rf-tags-bottom">
-            <div className="rf-tags-scroll" ref={scrollRef}>
+            {/* All reactions grid: 3-3-1 layout */}
+            <div className="rf-tags-grid">
               {REACTION_TAGS.map((t) => {
                 const active = selectedTag === t.key;
                 return (
                   <button
                     key={t.key}
-                    className={`rf-tag-chip${active ? ' active' : ''}`}
+                    className={`rf-tag-grid-item${active ? ' active' : ''}`}
                     onClick={() => {
                       setHoveredTag(t);
                       handleTagSelect(t.key);
                     }}
                   >
-                    <span className="rf-tag-emoji">{t.emoji}</span>
-                    <span>{t.label}</span>
+                    <span className="rf-tag-grid-emoji">{t.emoji}</span>
+                    <span className="rf-tag-grid-label">{t.label}</span>
+                    <span className="rf-tag-grid-desc">
+                      {TAG_DESCRIPTIONS[t.key]}
+                    </span>
                   </button>
                 );
               })}
-            </div>
-
-            <div className="rf-mono rf-scroll-hint">
-              &larr; swipe &middot; {REACTION_TAGS.length} reactions
-            </div>
-
-            {/* Description card */}
-            {hoveredTag && (
-              <div className="rf-tag-desc">
-                <div className="rf-tag-desc-header">
-                  <span>{hoveredTag.emoji}</span>
-                  <span className="rf-mono">{hoveredTag.label}</span>
-                </div>
-                <div className="rf-tag-desc-text">
-                  {TAG_DESCRIPTIONS[hoveredTag.key]}
-                </div>
-              </div>
-            )}
-
-            {/* See all reactions toggle */}
-            <button
-              className="rf-legend-toggle"
-              onClick={() => setLegendOpen(!legendOpen)}
-            >
-              {legendOpen ? 'Hide reactions' : 'See all reactions'}{' '}
-              <span
-                className={`rf-legend-arrow${legendOpen ? ' open' : ''}`}
-              >
-                &darr;
-              </span>
-            </button>
-
-            {/* Legend grid */}
-            <div className={`rf-legend${legendOpen ? ' open' : ''}`}>
-              {REACTION_TAGS.map((t, i) => (
-                <div
-                  key={t.key}
-                  className="rf-legend-item"
-                  onClick={() => {
-                    setHoveredTag(t);
-                    handleTagSelect(t.key);
-                  }}
-                >
-                  <span className="rf-legend-emoji">{t.emoji}</span>
-                  <div>
-                    <div className="rf-legend-label">{t.label}</div>
-                    <div className="rf-legend-desc">
-                      {TAG_DESCRIPTIONS[t.key]}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
 
             <div className="rf-divider" />
@@ -840,8 +840,26 @@ export default function ReactionFlow({
       {/* ══ COMPOSE ══ */}
       {screen === 'compose' && !submitted && (
         <div className="rf-compose">
-          {/* Passage area */}
-          <div className="rf-compose-passages">
+          {/* ── Quote finder section ── */}
+          <div className="rf-quote-finder">
+            <label className="rf-section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              Find a passage
+            </label>
+
+            {!selectedPassage && (
+              <textarea
+                value={quoteSearchText}
+                onChange={(e) => setQuoteSearchText(e.target.value)}
+                placeholder="Type words from the book to find the passage..."
+                className="rf-textarea rf-quote-textarea"
+              />
+            )}
+
+            {/* Passage suggestions */}
             {showSuggestionsPanel && (
               <PassageSuggestions
                 matches={suggestedMatches}
@@ -851,6 +869,7 @@ export default function ReactionFlow({
               />
             )}
 
+            {/* Selected passage preview */}
             {showSelectedPreview && chapterData && (
               <div className="ri-selected-passage">
                 <PassageHighlight
@@ -876,6 +895,7 @@ export default function ReactionFlow({
                   onClick={() => {
                     setSelectedPassage(null);
                     setShowManualSearch(false);
+                    setQuoteSearchText('');
                   }}
                 >
                   Clear passage
@@ -883,24 +903,69 @@ export default function ReactionFlow({
               </div>
             )}
 
+            {/* Manual search */}
             {showManualSearch && !selectedPassage && chapterData && (
               <PassageMatcher
                 chapterData={sectionChapterData}
-                reactionText={inputText}
+                reactionText={quoteSearchText}
                 onSelect={(p) => {
                   setSelectedPassage(p);
                   setShowManualSearch(false);
+                  const matchedSec = getSectionForSentence(p.start);
+                  if (matchedSec) setSelectedSection(matchedSec);
                 }}
                 selectedPassage={selectedPassage}
                 onPassageExpand={setSelectedPassage}
               />
             )}
+
+            {!selectedPassage && !showManualSearch && (
+              <button
+                className="rf-manual-search-link"
+                onClick={() => setShowManualSearch(true)}
+              >
+                Browse passages manually
+              </button>
+            )}
           </div>
 
-          <div className="rf-compose-spacer" />
+          <div className="rf-compose-divider" />
 
-          {/* Input area */}
+          {/* ── Section selector ── */}
+          <div className="rf-section-selector">
+            <label className="rf-section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M4 6h16M4 12h16M4 18h10" />
+              </svg>
+              Section
+            </label>
+            <select
+              className="rf-section-select"
+              value={selectedSection?.id || ''}
+              onChange={(e) => {
+                const sec = flowSections.find((s) => s.id === e.target.value);
+                if (sec) setSelectedSection(sec);
+              }}
+            >
+              {flowSections.map((sec) => (
+                <option key={sec.id} value={sec.id}>
+                  {sec.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="rf-compose-divider" />
+
+          {/* ── Reaction section ── */}
           <div className="rf-compose-input">
+            <label className="rf-section-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M4 7V4h16v3M9 20h6M12 4v16" />
+              </svg>
+              Your reaction
+            </label>
+
             {/* Mode toggle */}
             <div className="rf-mode-toggle">
               {['type', 'voice'].map((mode) => (
@@ -961,27 +1026,13 @@ export default function ReactionFlow({
                   showToast={showToast}
                 />
                 {rawTranscription && (
-                  <>
-                    <textarea
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      placeholder="Edit transcription..."
-                      className="rf-textarea"
-                      style={{ marginTop: '0.5rem' }}
-                    />
-                    {!selectedPassage && !showManualSearch && (
-                      <button
-                        className="rf-manual-search-link"
-                        onClick={() => setShowManualSearch(true)}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="M21 21l-4.35-4.35" />
-                        </svg>
-                        Search for a passage
-                      </button>
-                    )}
-                  </>
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Edit transcription..."
+                    className="rf-textarea"
+                    style={{ marginTop: '0.5rem' }}
+                  />
                 )}
               </div>
             )}
@@ -1013,6 +1064,19 @@ export default function ReactionFlow({
               </div>
             )}
           </div>
+
+          {/* ── Save button ── */}
+          <button
+            className={`rf-submit-btn rf-submit-inline${canSubmit ? ' enabled' : ''}`}
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+          >
+            {submitting
+              ? 'Saving...'
+              : canSubmit
+                ? 'Save reaction'
+                : 'Select a passage or type'}
+          </button>
         </div>
       )}
 
@@ -1037,23 +1101,6 @@ export default function ReactionFlow({
             <br />
             <em>{selectedSection?.title || 'this section'}</em>
           </div>
-        </div>
-      )}
-
-      {/* ══ BOTTOM BAR (compose screen) ══ */}
-      {screen === 'compose' && !submitted && (
-        <div className="rf-bottom-bar">
-          <button
-            className={`rf-submit-btn${canSubmit ? ' enabled' : ''}`}
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-          >
-            {submitting
-              ? 'Saving...'
-              : canSubmit
-                ? 'Save reaction'
-                : 'Select a passage or type'}
-          </button>
         </div>
       )}
 
@@ -1141,6 +1188,7 @@ export default function ReactionFlow({
           partialReveal={partialReveal}
           onShowConcept={onShowConcept}
           onAddReply={addReply}
+          onUpdateReaction={updateReaction}
           onDeleteReaction={deleteReaction}
           onDeleteReply={deleteReply}
         />
@@ -1161,6 +1209,7 @@ function RevealOverlay({
   partialReveal,
   onShowConcept,
   onAddReply,
+  onUpdateReaction,
   onDeleteReaction,
   onDeleteReply,
 }) {
@@ -1261,9 +1310,10 @@ function RevealOverlay({
               reaction={r}
               chapterData={chapterData}
               onShowConcept={onShowConcept}
+              onUpdate={r.reader === reader ? onUpdateReaction : undefined}
               reader={reader}
               onAddReply={onAddReply}
-              onDeleteReaction={onDeleteReaction}
+              onDeleteReaction={r.reader === reader ? onDeleteReaction : undefined}
               onDeleteReply={onDeleteReply}
             />
           ))}
