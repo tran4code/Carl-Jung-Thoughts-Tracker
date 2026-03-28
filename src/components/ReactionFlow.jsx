@@ -107,10 +107,10 @@ export default function ReactionFlow({
     [searchableChapterData]
   );
 
-  // Level-2 sections only for the flow
+  // All sections for the flow
   const flowSections = useMemo(() => {
     if (!sections) return [];
-    return sections.filter((s) => s.level === 2);
+    return sections;
   }, [sections]);
 
   // Find current section (first unfinished by me)
@@ -167,7 +167,7 @@ export default function ReactionFlow({
     for (let i = chapSections.length - 1; i >= 0; i--) {
       const secStartIdx = paragraphs.findIndex((p) => p.id === chapSections[i].startParagraph);
       if (secStartIdx !== -1 && paraIdx >= secStartIdx) {
-        // Match to flowSections (level-2 only)
+        // Match to flowSections
         return flowSections.find((fs) => fs.id === chapSections[i].id) || null;
       }
     }
